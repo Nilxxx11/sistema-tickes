@@ -5,296 +5,614 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SupportDesk — Vehidiesel & HB</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎫</text></svg>">
+<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   :root {
-    --bg: #0a0a0f;
-    --surface: #12121a;
-    --surface2: #1a1a26;
+    --bg: #080810;
+    --surface: #0f0f1a;
+    --surface2: #161625;
+    --surface3: #1e1e30;
     --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
     --accent: #6c63ff;
     --accent2: #ff6584;
     --accent3: #43e97b;
+    --accent-glow: rgba(108,99,255,0.25);
     --text: #f0f0f8;
-    --muted: #8080a0;
+    --text2: #c8c8e0;
+    --muted: #6a6a8a;
     --danger: #ff4757;
     --warning: #ffa502;
     --success: #2ed573;
-    --radius: 14px;
-    --shadow: 0 8px 32px rgba(0,0,0,0.4);
-    /* Empresa colors */
+    --radius: 12px;
+    --radius-lg: 16px;
+    --shadow: 0 8px 32px rgba(0,0,0,0.5);
+    --shadow-sm: 0 2px 12px rgba(0,0,0,0.3);
     --vehidiesel: #3b82f6;
     --hb: #f59e0b;
     --vehimotors: #e11d48;
+    --sidebar-w: 248px;
+    --topbar-h: 56px;
   }
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
-  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); overflow-y: scroll; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); overflow-y: scroll; -webkit-font-smoothing: antialiased; }
 
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: var(--surface); }
-  ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(108,99,255,.4); border-radius: 2px; }
 
-  /* ── LOADER ── */
-  #loader { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity .4s; }
+  /* ══ LOADER ══ */
+  #loader { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity .4s; gap: 16px; }
   #loader.hide { opacity: 0; pointer-events: none; }
-  .loader-ring { width: 56px; height: 56px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+  .loader-ring { width: 44px; height: 44px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-text { font-size: .78rem; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; }
 
-  /* ── PUBLIC VIEW ── */
-  #public-view { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 0 20px 60px; position: relative; }
-  .pub-header { width: 100%; max-width: 720px; padding: 40px 0 32px; display: flex; justify-content: space-between; align-items: center; }
-  .logo { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-  .btn-login-link { background: none; border: 1px solid var(--border); color: var(--muted); padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: .85rem; font-family: inherit; transition: all .2s; }
-  .btn-login-link:hover { border-color: var(--accent); color: var(--accent); }
+  .loader-info { font-size: .75rem; color: var(--text2); text-align: center; max-width: 300px; line-height: 1.5; }
+  .loader-progress { width: 200px; height: 3px; background: var(--surface3); border-radius: 2px; overflow: hidden; }
+  .loader-progress-bar { height: 100%; background: var(--accent); border-radius: 2px; transition: width .3s; }
 
-  /* ── EMPRESA SELECTOR (public) ── */
-  .empresa-selector { width: 100%; max-width: 720px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 28px; }
-  .empresa-card {
-    border: 2px solid var(--border); border-radius: 16px; padding: 22px 20px;
-    cursor: pointer; transition: all .2s; text-align: center; background: var(--surface);
+  /* ══ PUBLIC VIEW ══ */
+  #public-view {
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    padding: 0 16px 80px; position: relative;
+    background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(108,99,255,.12) 0%, transparent 70%);
   }
-  .empresa-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
-  .empresa-card.selected-vehidiesel { border-color: var(--vehidiesel); background: rgba(59,130,246,.08); }
-  .empresa-card.selected-hb { border-color: var(--hb); background: rgba(245,158,11,.08); }
-  .empresa-card.selected-vehimotors { border-color: var(--vehimotors); background: rgba(225,29,72,.08); }
-  .empresa-card .emp-logo { font-size: 2.2rem; margin-bottom: 10px; }
-  .empresa-card .emp-name { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; }
-  .empresa-card .emp-sub { font-size: .78rem; color: var(--muted); margin-top: 3px; }
 
-  .pub-card { width: 100%; max-width: 720px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 44px 48px; box-shadow: var(--shadow); animation: fadeUp .5s ease; }
-  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
-  .pub-card h1 { font-family: 'Syne', sans-serif; font-size: 2rem; margin-bottom: 6px; }
-  .pub-card > p { color: var(--muted); margin-bottom: 28px; }
+  .pub-header {
+    width: 100%; max-width: 720px; padding: 24px 0 24px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .pub-logos { display: flex; align-items: center; gap: 12px; }
+  .pub-logos img { height: 32px; object-fit: contain; opacity: .85; transition: opacity .2s; }
+  .pub-logos img:hover { opacity: 1; }
+  .pub-logos .divider { width: 1px; height: 24px; background: var(--border2); }
 
-  /* empresa indicator strip */
-  .empresa-strip { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 10px; margin-bottom: 24px; font-size: .88rem; font-weight: 600; }
-  .empresa-strip.vehidiesel { background: rgba(59,130,246,.12); color: #60a5fa; border: 1px solid rgba(59,130,246,.2); }
-  .empresa-strip.hb { background: rgba(245,158,11,.12); color: #fbbf24; border: 1px solid rgba(245,158,11,.2); }
-  .empresa-strip.vehimotors { background: rgba(225,29,72,.12); color: #fb7185; border: 1px solid rgba(225,29,72,.2); }
-  .empresa-strip button { margin-left: auto; background: none; border: none; color: inherit; cursor: pointer; font-size: .8rem; opacity: .7; font-family: inherit; }
+  .btn-login-link {
+    background: none; border: 1px solid var(--border2); color: var(--muted);
+    padding: 7px 16px; border-radius: 8px; cursor: pointer; font-size: .82rem;
+    font-family: inherit; transition: all .2s; font-weight: 500; white-space: nowrap;
+  }
+  .btn-login-link:hover { border-color: var(--accent); color: var(--accent); background: rgba(108,99,255,.06); }
+
+  /* Empresa selector */
+  .empresa-selector { width: 100%; max-width: 720px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+  .empresa-card {
+    border: 1.5px solid var(--border2); border-radius: var(--radius-lg); padding: 18px 14px;
+    cursor: pointer; transition: all .25s cubic-bezier(.4,0,.2,1); text-align: center;
+    background: var(--surface); position: relative; overflow: hidden;
+  }
+  .empresa-card::before {
+    content: ''; position: absolute; inset: 0; opacity: 0; transition: opacity .3s;
+    background: radial-gradient(ellipse at 50% 0%, rgba(108,99,255,.15), transparent 70%);
+  }
+  .empresa-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,.4); border-color: var(--border2); }
+  .empresa-card:hover::before { opacity: 1; }
+  .empresa-card.selected-vehidiesel { border-color: var(--vehidiesel); background: rgba(59,130,246,.07); box-shadow: 0 0 0 1px rgba(59,130,246,.2), var(--shadow-sm); }
+  .empresa-card.selected-hb { border-color: var(--hb); background: rgba(245,158,11,.07); box-shadow: 0 0 0 1px rgba(245,158,11,.2), var(--shadow-sm); }
+  .empresa-card.selected-vehimotors { border-color: var(--vehimotors); background: rgba(225,29,72,.07); box-shadow: 0 0 0 1px rgba(225,29,72,.2), var(--shadow-sm); }
+  .empresa-card .emp-logo { margin-bottom: 10px; display: flex; align-items: center; justify-content: center; height: 60px; }
+  .empresa-card .emp-logo img { height: 54px; object-fit: contain; max-width: 100%; }
+  .empresa-card .emp-name { font-family: 'Syne', sans-serif; font-size: .88rem; font-weight: 700; line-height: 1.3; }
+  .empresa-card .emp-sub { font-size: .72rem; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+
+  .pub-card {
+    width: 100%; max-width: 720px; background: var(--surface);
+    border: 1px solid var(--border2); border-radius: var(--radius-lg);
+    padding: 32px 36px; box-shadow: var(--shadow); animation: fadeUp .4s ease;
+  }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+  .pub-card h1 { font-family: 'Syne', sans-serif; font-size: 1.7rem; margin-bottom: 6px; line-height: 1.2; }
+  .pub-card > p { color: var(--muted); margin-bottom: 24px; font-size: .9rem; }
+
+  .pub-section-title {
+    text-align: center; margin-bottom: 24px;
+  }
+  .pub-section-title h1 { font-family: 'Syne', sans-serif; font-size: 1.6rem; margin-bottom: 6px; }
+  .pub-section-title p { color: var(--muted); font-size: .88rem; }
+
+  .empresa-strip {
+    display: flex; align-items: center; gap: 10px; padding: 9px 14px;
+    border-radius: 9px; margin-bottom: 20px; font-size: .85rem; font-weight: 600;
+  }
+  .empresa-strip.vehidiesel { background: rgba(59,130,246,.1); color: #60a5fa; border: 1px solid rgba(59,130,246,.18); }
+  .empresa-strip.hb { background: rgba(245,158,11,.1); color: #fbbf24; border: 1px solid rgba(245,158,11,.18); }
+  .empresa-strip.vehimotors { background: rgba(225,29,72,.1); color: #fb7185; border: 1px solid rgba(225,29,72,.18); }
+  .empresa-strip button { margin-left: auto; background: none; border: none; color: inherit; cursor: pointer; font-size: .78rem; opacity: .65; font-family: inherit; padding: 2px 6px; border-radius: 4px; transition: opacity .2s; }
   .empresa-strip button:hover { opacity: 1; }
 
-  /* ── FORMS ── */
-  .form-group { margin-bottom: 20px; }
-  label { display: block; font-size: .82rem; font-weight: 600; color: var(--muted); margin-bottom: 7px; letter-spacing: .04em; text-transform: uppercase; }
-  input, select, textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: inherit; font-size: .95rem; padding: 12px 16px; outline: none; transition: border-color .2s; }
-  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
-  textarea { resize: vertical; min-height: 110px; }
+  /* ══ FORMS ══ */
+  .form-group { margin-bottom: 16px; }
+  label { display: block; font-size: .75rem; font-weight: 600; color: var(--muted); margin-bottom: 6px; letter-spacing: .04em; text-transform: uppercase; }
+  input, select, textarea {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 9px; color: var(--text); font-family: inherit; font-size: .9rem;
+    padding: 10px 14px; outline: none; transition: border-color .2s, box-shadow .2s;
+    -webkit-appearance: none; appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(108,99,255,.12);
+  }
+  textarea { resize: vertical; min-height: 100px; }
   select option { background: var(--surface2); }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  input::placeholder, textarea::placeholder { color: var(--muted); opacity: .7; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
 
-  /* ── BUTTONS ── */
-  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 26px; border-radius: 10px; border: none; font-family: inherit; font-size: .95rem; font-weight: 600; cursor: pointer; transition: all .2s; white-space: nowrap; }
+  /* ══ BUTTONS ══ */
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px; padding: 10px 22px;
+    border-radius: 9px; border: none; font-family: inherit; font-size: .88rem;
+    font-weight: 600; cursor: pointer; transition: all .2s; white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+  }
   .btn-primary { background: var(--accent); color: #fff; }
-  .btn-primary:hover { background: #7b73ff; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(108,99,255,.35); }
+  .btn-primary:hover { background: #7b73ff; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(108,99,255,.3); }
+  .btn-primary:active { transform: translateY(0); }
   .btn-danger { background: var(--danger); color: #fff; }
   .btn-danger:hover { background: #ff6070; }
-  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
-  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-  .btn-sm { padding: 7px 14px; font-size: .82rem; border-radius: 7px; }
-  .btn-full { width: 100%; justify-content: center; }
-  .btn:disabled { opacity: .5; pointer-events: none; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border2); color: var(--muted); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: rgba(108,99,255,.05); }
+  .btn-sm { padding: 6px 12px; font-size: .78rem; border-radius: 7px; }
+  .btn-full { width: 100%; justify-content: center; padding: 12px; }
+  .btn:disabled { opacity: .45; pointer-events: none; }
 
-  /* ── SUCCESS ── */
-  #ticket-success { display: none; text-align: center; padding: 20px 0; }
-  .success-icon { width: 72px; height: 72px; background: rgba(46,213,115,.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2rem; }
-  #ticket-success h2 { font-family: 'Syne', sans-serif; font-size: 1.6rem; margin-bottom: 8px; }
-  #ticket-success p { color: var(--muted); }
+  /* ══ SUCCESS ══ */
+  #ticket-success { display: none; text-align: center; padding: 16px 0; }
+  .success-icon {
+    width: 64px; height: 64px; background: rgba(46,213,115,.12);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px; font-size: 1.8rem; border: 1px solid rgba(46,213,115,.2);
+  }
+  #ticket-success h2 { font-family: 'Syne', sans-serif; font-size: 1.4rem; margin-bottom: 8px; }
+  #ticket-success p { color: var(--muted); font-size: .9rem; line-height: 1.6; }
   #ticket-num { color: var(--accent3); font-weight: 700; }
 
-  /* ── LOGIN MODAL ── */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(6px); z-index: 1000; align-items: center; justify-content: center; }
+  /* ══ LOGIN MODAL ══ */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.75); backdrop-filter: blur(8px);
+    z-index: 1000; align-items: center; justify-content: center; padding: 16px;
+  }
   .modal-overlay.open { display: flex; }
-  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 40px; width: 100%; max-width: 420px; box-shadow: var(--shadow); animation: fadeUp .3s ease; position: relative; }
-  .modal h2 { font-family: 'Syne', sans-serif; font-size: 1.5rem; margin-bottom: 6px; }
-  .modal p { color: var(--muted); margin-bottom: 28px; font-size: .9rem; }
-  .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--muted); font-size: 1.3rem; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: color .2s; }
-  .modal-close:hover { color: var(--text); }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: var(--radius-lg); padding: 32px; width: 100%; max-width: 400px;
+    box-shadow: var(--shadow); animation: fadeUp .3s ease; position: relative;
+  }
+  .modal h2 { font-family: 'Syne', sans-serif; font-size: 1.35rem; margin-bottom: 4px; }
+  .modal p { color: var(--muted); margin-bottom: 24px; font-size: .88rem; }
+  .modal-close {
+    position: absolute; top: 14px; right: 14px; background: var(--surface2);
+    border: 1px solid var(--border); color: var(--muted); font-size: 1rem;
+    cursor: pointer; padding: 4px 9px; border-radius: 7px; transition: all .2s; line-height: 1.4;
+  }
+  .modal-close:hover { color: var(--text); background: var(--surface3); }
 
-  /* ── DASHBOARD ── */
+  /* ══ DASHBOARD ══ */
   #dashboard-view { display: none; }
-  .dash-layout { display: flex; }
+  .dash-layout { display: flex; min-height: 100vh; }
 
-  .sidebar { width: 264px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 28px 16px; position: sticky; top: 0; height: 100vh; z-index: 100; overflow-y: auto; }
-  .sidebar-logo { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; padding: 0 12px 24px; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  /* Mobile topbar */
+  .mobile-topbar {
+    display: none; position: fixed; top: 0; left: 0; right: 0; height: var(--topbar-h);
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    align-items: center; justify-content: space-between; padding: 0 16px;
+    z-index: 200; backdrop-filter: blur(10px);
+  }
+  .mobile-topbar-logo { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .mobile-topbar-right { display: flex; align-items: center; gap: 8px; }
+  .btn-hamburger {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    width: 36px; height: 36px; border-radius: 8px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; font-size: 1rem; transition: all .2s;
+  }
+  .btn-hamburger:hover { background: var(--surface3); }
+
+  /* Sidebar overlay for mobile */
+  .sidebar-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6);
+    z-index: 149; backdrop-filter: blur(2px);
+  }
+  .sidebar-overlay.open { display: block; }
+
+  .sidebar {
+    width: var(--sidebar-w); flex-shrink: 0; background: var(--surface);
+    border-right: 1px solid var(--border); display: flex; flex-direction: column;
+    padding: 20px 12px; position: sticky; top: 0; height: 100vh; z-index: 150;
+    overflow-y: auto; transition: transform .3s cubic-bezier(.4,0,.2,1);
+  }
+
+  .sidebar-logos {
+    padding: 0 8px 16px; display: flex; flex-direction: column; gap: 6px;
+    border-bottom: 1px solid var(--border); margin-bottom: 16px;
+  }
+  .sidebar-logo-row {
+    padding: 6px 8px; background: rgba(255,255,255,.03); border-radius: 8px;
+    display: flex; align-items: center;
+  }
+  .sidebar-logo-row img { height: 22px; object-fit: contain; max-width: 100%; opacity: .8; }
 
   /* empresa filter pill in sidebar */
-  .sidebar-empresa-filter { padding: 0 4px 20px; }
-  .emp-filter-btns { display: flex; gap: 6px; flex-wrap: wrap; }
-  .emp-filter-btn { flex: 1; padding: 7px 4px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: .75rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: all .2s; text-align: center; }
+  .sidebar-empresa-filter { padding: 0 0 14px; }
+  .sidebar-filter-label { font-size: .68rem; font-weight: 700; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; padding: 0 4px 7px; display: block; }
+  .emp-filter-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+  .emp-filter-btn {
+    padding: 6px 4px; border-radius: 7px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-size: .72rem; font-weight: 600;
+    font-family: inherit; cursor: pointer; transition: all .2s; text-align: center;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+  }
   .emp-filter-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .emp-filter-btn.active-all { background: rgba(108,99,255,.15); color: var(--accent); border-color: rgba(108,99,255,.3); }
-  .emp-filter-btn.active-vehidiesel { background: rgba(59,130,246,.15); color: #60a5fa; border-color: rgba(59,130,246,.3); }
-  .emp-filter-btn.active-hb { background: rgba(245,158,11,.15); color: #fbbf24; border-color: rgba(245,158,11,.3); }
-  .emp-filter-btn.active-vehimotors { background: rgba(225,29,72,.15); color: #fb7185; border-color: rgba(225,29,72,.3); }
+  .emp-filter-btn.active-all { background: rgba(108,99,255,.12); color: var(--accent); border-color: rgba(108,99,255,.25); }
+  .emp-filter-btn.active-vehidiesel { background: rgba(59,130,246,.12); color: #60a5fa; border-color: rgba(59,130,246,.25); }
+  .emp-filter-btn.active-hb { background: rgba(245,158,11,.12); color: #fbbf24; border-color: rgba(245,158,11,.25); }
+  .emp-filter-btn.active-vehimotors { background: rgba(225,29,72,.12); color: #fb7185; border-color: rgba(225,29,72,.25); }
 
-  .nav-section { margin-bottom: 8px; }
-  .nav-section-title { font-size: .72rem; font-weight: 700; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; padding: 8px 12px 4px; }
-  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 9px; cursor: pointer; color: var(--muted); font-size: .9rem; font-weight: 500; transition: all .15s; user-select: none; border: 1px solid transparent; }
-  .nav-item:hover { background: var(--surface2); color: var(--text); }
-  .nav-item.active { background: rgba(108,99,255,.15); color: var(--accent); border-color: rgba(108,99,255,.2); }
-  .nav-item .icon { font-size: 1.05rem; width: 20px; text-align: center; }
-  .nav-badge { margin-left: auto; background: var(--accent); color: #fff; font-size: .7rem; font-weight: 700; padding: 2px 7px; border-radius: 20px; min-width: 20px; text-align: center; }
+  .nav-section { margin-bottom: 4px; }
+  .nav-section-title { font-size: .67rem; font-weight: 700; color: var(--muted); letter-spacing: .09em; text-transform: uppercase; padding: 8px 10px 4px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: 8px;
+    cursor: pointer; color: var(--muted); font-size: .87rem; font-weight: 500;
+    transition: all .15s; user-select: none; border: 1px solid transparent; margin-bottom: 1px;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text2); }
+  .nav-item.active { background: rgba(108,99,255,.12); color: var(--accent); border-color: rgba(108,99,255,.18); }
+  .nav-item .icon { font-size: 1rem; width: 18px; text-align: center; flex-shrink: 0; }
+  .nav-badge {
+    margin-left: auto; background: var(--accent); color: #fff; font-size: .65rem;
+    font-weight: 700; padding: 2px 6px; border-radius: 20px; min-width: 18px; text-align: center;
+  }
 
-  .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); }
-  .user-pill { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 9px; background: var(--surface2); }
-  .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .85rem; flex-shrink: 0; }
+  .sidebar-footer { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border); }
+  .user-pill {
+    display: flex; align-items: center; gap: 9px; padding: 9px 10px;
+    border-radius: 8px; background: var(--surface2); border: 1px solid var(--border);
+  }
+  .user-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: .82rem; flex-shrink: 0;
+  }
   .user-info { min-width: 0; flex: 1; }
-  .user-name { font-size: .85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .user-role { font-size: .72rem; color: var(--muted); }
-  .btn-logout { background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px; font-size: 1rem; transition: color .2s; flex-shrink: 0; }
+  .user-name { font-size: .82rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { font-size: .68rem; color: var(--muted); }
+  .btn-logout {
+    background: none; border: none; color: var(--muted); cursor: pointer;
+    padding: 4px; font-size: .95rem; transition: color .2s; flex-shrink: 0;
+  }
   .btn-logout:hover { color: var(--danger); }
 
-  .main-content { flex: 1; padding: 36px 40px; padding-bottom: 80px; min-width: 0; }
+  .main-content { flex: 1; padding: 28px 32px 80px; min-width: 0; overflow-x: hidden; }
   .page { display: none; }
   .page.active { display: block; height: auto; }
-  .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
-  .page-header h1 { font-family: 'Syne', sans-serif; font-size: 1.8rem; }
-  .page-header p { color: var(--muted); margin-top: 4px; font-size: .9rem; }
+  .page-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+  }
+  .page-header h1 { font-family: 'Syne', sans-serif; font-size: 1.6rem; line-height: 1.2; }
+  .page-header p { color: var(--muted); margin-top: 3px; font-size: .87rem; }
 
-  /* ── STATS ── */
-  .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; margin-bottom: 32px; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; display: flex; flex-direction: column; gap: 8px; }
-  .stat-label { font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
-  .stat-value { font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 700; }
-  .stat-card.accent { border-color: rgba(108,99,255,.3); background: rgba(108,99,255,.08); }
-  .stat-card.danger { border-color: rgba(255,71,87,.3); background: rgba(255,71,87,.08); }
-  .stat-card.warning { border-color: rgba(255,165,2,.3); background: rgba(255,165,2,.08); }
-  .stat-card.success { border-color: rgba(46,213,115,.3); background: rgba(46,213,115,.08); }
-  .stat-card.vehidiesel { border-color: rgba(59,130,246,.3); background: rgba(59,130,246,.08); }
-  .stat-card.hb-color { border-color: rgba(245,158,11,.3); background: rgba(245,158,11,.08); }
-  .stat-card.vehimotors-color { border-color: rgba(225,29,72,.3); background: rgba(225,29,72,.08); }
+  /* ══ STATS ══ */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 18px; display: flex; flex-direction: column; gap: 6px;
+    transition: border-color .2s;
+  }
+  .stat-card:hover { border-color: var(--border2); }
+  .stat-label { font-size: .72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .stat-value { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 700; line-height: 1; }
+  .stat-card.accent { border-color: rgba(108,99,255,.25); background: rgba(108,99,255,.06); }
+  .stat-card.danger { border-color: rgba(255,71,87,.25); background: rgba(255,71,87,.06); }
+  .stat-card.warning { border-color: rgba(255,165,2,.25); background: rgba(255,165,2,.06); }
+  .stat-card.success { border-color: rgba(46,213,115,.25); background: rgba(46,213,115,.06); }
+  .stat-card.vehidiesel { border-color: rgba(59,130,246,.25); background: rgba(59,130,246,.06); }
+  .stat-card.hb-color { border-color: rgba(245,158,11,.25); background: rgba(245,158,11,.06); }
+  .stat-card.vehimotors-color { border-color: rgba(225,29,72,.25); background: rgba(225,29,72,.06); }
 
-  /* ── EMPRESA SPLIT STATS ── */
-  .empresa-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+  /* ══ EMPRESA SPLIT STATS ══ */
+  .empresa-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 24px; }
   .empresa-stat-block { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  .empresa-stat-header { padding: 14px 20px; display: flex; align-items: center; gap: 10px; font-family: 'Syne', sans-serif; font-size: .95rem; font-weight: 700; }
-  .empresa-stat-header.vehidiesel { background: rgba(59,130,246,.1); border-bottom: 1px solid rgba(59,130,246,.2); color: #60a5fa; }
-  .empresa-stat-header.hb { background: rgba(245,158,11,.1); border-bottom: 1px solid rgba(245,158,11,.2); color: #fbbf24; }
-  .empresa-stat-header.vehimotors { background: rgba(225,29,72,.1); border-bottom: 1px solid rgba(225,29,72,.2); color: #fb7185; }
+  .empresa-stat-header { padding: 12px 16px; display: flex; align-items: center; gap: 9px; font-family: 'Syne', sans-serif; font-size: .88rem; font-weight: 700; }
+  .empresa-stat-header.vehidiesel { background: rgba(59,130,246,.08); border-bottom: 1px solid rgba(59,130,246,.15); color: #60a5fa; }
+  .empresa-stat-header.hb { background: rgba(245,158,11,.08); border-bottom: 1px solid rgba(245,158,11,.15); color: #fbbf24; }
+  .empresa-stat-header.vehimotors { background: rgba(225,29,72,.08); border-bottom: 1px solid rgba(225,29,72,.15); color: #fb7185; }
   .empresa-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
-  .empresa-stat-item { padding: 16px 20px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .empresa-stat-item { padding: 12px 16px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
   .empresa-stat-item:nth-child(even) { border-right: none; }
   .empresa-stat-item:nth-last-child(-n+2) { border-bottom: none; }
-  .empresa-stat-item .s-label { font-size: .72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
-  .empresa-stat-item .s-val { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 700; }
+  .empresa-stat-item .s-label { font-size: .67rem; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-bottom: 3px; }
+  .empresa-stat-item .s-val { font-family: 'Syne', sans-serif; font-size: 1.45rem; font-weight: 700; }
 
-  /* ── TABLE ── */
+  /* ══ TABLE ══ */
   .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
-  
-  .table-header { padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 12px; }
-  .table-header h3 { font-size: 1rem; font-weight: 600; }
-  .table-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .table-filters input { width: 200px; padding: 8px 14px; font-size: .85rem; }
-  .table-filters select { padding: 8px 14px; font-size: .85rem; border-radius: 9px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: inherit; }
+  .table-header {
+    padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px;
+  }
+  .table-header h3 { font-size: .95rem; font-weight: 600; }
+  .table-filters { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .table-filters input { width: 180px; padding: 7px 12px; font-size: .82rem; }
+  .table-filters select { padding: 7px 12px; font-size: .82rem; border-radius: 8px; border: 1px solid var(--border2); background: var(--surface2); color: var(--text); font-family: inherit; }
   .data-table { width: 100%; border-collapse: collapse; }
-  .data-table th { padding: 12px 16px; text-align: left; font-size: .75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); white-space: nowrap; }
-  .data-table td { padding: 14px 16px; font-size: .88rem; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: middle; }
+  .data-table th { padding: 10px 14px; text-align: left; font-size: .7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .data-table td { padding: 12px 14px; font-size: .85rem; border-bottom: 1px solid rgba(255,255,255,.03); vertical-align: middle; }
   .data-table tr:last-child td { border-bottom: none; }
-  .data-table tbody tr:hover { background: rgba(255,255,255,.025); }
-  .data-table-wrapper { overflow-x: auto; width: 100%; }
+  .data-table tbody tr:hover { background: rgba(255,255,255,.02); }
+  .data-table-wrapper { overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; }
 
-  /* ── EMPRESA PILL ── */
-  .emp-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: .72rem; font-weight: 700; }
-  .emp-pill.vehidiesel { background: rgba(59,130,246,.15); color: #60a5fa; }
-  .emp-pill.hb { background: rgba(245,158,11,.15); color: #fbbf24; }
-  .emp-pill.vehimotors { background: rgba(225,29,72,.15); color: #fb7185; }
+  /* ══ EMPRESA PILL ══ */
+  .emp-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 20px; font-size: .7rem; font-weight: 700; white-space: nowrap; }
+  .emp-pill.vehidiesel { background: rgba(59,130,246,.12); color: #60a5fa; }
+  .emp-pill.hb { background: rgba(245,158,11,.12); color: #fbbf24; }
+  .emp-pill.vehimotors { background: rgba(225,29,72,.12); color: #fb7185; }
 
-  /* ── BADGES ── */
-  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: .75rem; font-weight: 700; }
-  .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
-  .badge-open { background: rgba(108,99,255,.2); color: #a29bfe; }
+  /* ══ BADGES ══ */
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 20px; font-size: .72rem; font-weight: 700; white-space: nowrap; }
+  .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .badge-open { background: rgba(108,99,255,.15); color: #a29bfe; }
   .badge-open::before { background: #a29bfe; }
-  .badge-progress { background: rgba(255,165,2,.2); color: #ffa502; }
+  .badge-progress { background: rgba(255,165,2,.15); color: #ffa502; }
   .badge-progress::before { background: #ffa502; }
-  .badge-closed { background: rgba(46,213,115,.2); color: #2ed573; }
+  .badge-closed { background: rgba(46,213,115,.15); color: #2ed573; }
   .badge-closed::before { background: #2ed573; }
-  .badge-active { background: rgba(46,213,115,.2); color: #2ed573; }
+  .badge-active { background: rgba(46,213,115,.15); color: #2ed573; }
   .badge-active::before { background: #2ed573; }
-  .badge-inactive { background: rgba(128,128,160,.2); color: #8080a0; }
+  .badge-inactive { background: rgba(128,128,160,.15); color: #8080a0; }
   .badge-inactive::before { background: #8080a0; }
-  .badge-maintenance { background: rgba(255,165,2,.2); color: #ffa502; }
+  .badge-maintenance { background: rgba(255,165,2,.15); color: #ffa502; }
   .badge-maintenance::before { background: #ffa502; }
-  .badge-pending { background: rgba(255,165,2,.2); color: #ffa502; }
+  .badge-pending { background: rgba(255,165,2,.15); color: #ffa502; }
   .badge-pending::before { background: #ffa502; }
-  .badge-done { background: rgba(46,213,115,.2); color: #2ed573; }
+  .badge-done { background: rgba(46,213,115,.15); color: #2ed573; }
   .badge-done::before { background: #2ed573; }
-  .badge-admin { background: rgba(108,99,255,.2); color: #a29bfe; }
+  .badge-admin { background: rgba(108,99,255,.15); color: #a29bfe; }
   .badge-admin::before { background: #a29bfe; }
-  .badge-agent { background: rgba(67,233,123,.2); color: #43e97b; }
+  .badge-agent { background: rgba(67,233,123,.15); color: #43e97b; }
   .badge-agent::before { background: #43e97b; }
 
-  /* ── EMPTY STATE ── */
-  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
-  .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; opacity: .4; }
-  .empty-state p { font-size: .9rem; }
+  /* ══ EMPTY STATE ══ */
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--muted); }
+  .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 10px; opacity: .35; }
+  .empty-state p { font-size: .87rem; }
 
-  /* ── FORM CARD ── */
-  .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; }
-  .form-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 22px; }
+  /* ══ FORM CARD ══ */
+  .form-card {
+    background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius);
+    padding: 22px; margin-bottom: 16px;
+  }
+  .form-card h3 { font-size: .95rem; font-weight: 600; margin-bottom: 18px; }
   .actions-row { display: flex; gap: 8px; flex-wrap: wrap; }
 
-  /* ── TOAST ── */
-  #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9000; display: flex; flex-direction: column; gap: 10px; }
-  .toast { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 20px; min-width: 280px; max-width: 360px; display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow); animation: toastIn .3s ease; font-size: .9rem; }
-  @keyframes toastIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:none; } }
+  /* ══ TOAST ══ */
+  #toast-container { position: fixed; bottom: 20px; right: 16px; z-index: 9000; display: flex; flex-direction: column; gap: 8px; max-width: calc(100vw - 32px); }
+  .toast {
+    background: var(--surface2); border: 1px solid var(--border2); border-radius: 10px;
+    padding: 12px 16px; min-width: 240px; max-width: 320px; display: flex; align-items: center;
+    gap: 10px; box-shadow: var(--shadow); animation: toastIn .3s ease; font-size: .87rem;
+  }
+  @keyframes toastIn { from { opacity:0; transform:translateX(16px); } to { opacity:1; transform:none; } }
   .toast.success { border-left: 3px solid var(--success); }
   .toast.error { border-left: 3px solid var(--danger); }
   .toast.info { border-left: 3px solid var(--accent); }
 
-  /* ── DETAIL PANEL ── */
-  .detail-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); z-index: 500; align-items: flex-start; justify-content: flex-end; }
-  .detail-overlay.open { display: flex; }
-  .detail-panel { width: 100%; max-width: 540px; height: 100vh; background: var(--surface); border-left: 1px solid var(--border); overflow-y: auto; padding: 32px; animation: slideIn .3s ease; }
-  @keyframes slideIn { from { transform: translateX(100%); } to { transform: none; } }
-  .detail-panel h2 { font-family: 'Syne', sans-serif; font-size: 1.3rem; margin-bottom: 4px; }
-  .detail-close { background: none; border: none; color: var(--muted); font-size: 1.3rem; cursor: pointer; padding: 6px 10px; border-radius: 6px; transition: color .2s; }
-  .detail-close:hover { color: var(--text); }
-  .detail-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-  .detail-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-  .detail-field label { font-size: .72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; display: block; }
-  .detail-field p { font-size: .9rem; }
-  .detail-desc { background: var(--surface2); border-radius: 10px; padding: 16px; font-size: .88rem; line-height: 1.6; color: var(--text); margin-bottom: 20px; }
-  .status-select { width: 100%; padding: 10px 14px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-family: inherit; font-size: .9rem; }
-
-  /* ── CONSULTA PÚBLICA ── */
-  .consulta-card { width: 100%; max-width: 720px; }
-  .tabs-pub { display: flex; gap: 0; margin-bottom: 28px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
-  .tab-pub { flex: 1; padding: 13px; text-align: center; cursor: pointer; font-size: .9rem; font-weight: 600; color: var(--muted); background: var(--surface); transition: all .2s; border: none; font-family: inherit; }
-  .tab-pub.active { background: var(--accent); color: #fff; }
-  .ticket-result-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 14px; cursor: pointer; transition: border-color .2s; }
-  .ticket-result-card:hover { border-color: var(--accent); }
-  .ticket-result-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
-  .ticket-result-num { font-size: .75rem; color: var(--muted); font-weight: 700; }
-  .ticket-result-asunto { font-weight: 600; font-size: .95rem; margin-bottom: 4px; }
-  .ticket-result-meta { font-size: .8rem; color: var(--muted); }
-  .solucion-box { background: rgba(46,213,115,.08); border: 1px solid rgba(46,213,115,.2); border-radius: 10px; padding: 14px 16px; margin-top: 12px; }
-  .solucion-box .sol-label { font-size: .72rem; font-weight: 700; color: var(--success); text-transform: uppercase; margin-bottom: 6px; }
-  .solucion-box p { font-size: .88rem; line-height: 1.6; color: var(--text); }
-  /* ── SOLUTION IN DETAIL PANEL ── */
-  .solucion-panel { background: rgba(46,213,115,.07); border: 1px solid rgba(46,213,115,.2); border-radius: 10px; padding: 16px; margin-bottom: 20px; }
-  .solucion-panel .sol-title { font-size: .75rem; font-weight: 700; color: var(--success); text-transform: uppercase; margin-bottom: 8px; }
-
-  /* ── RESPONSIVE ── */
-  @media (max-width: 900px) {
-    .sidebar { transform: translateX(-100%); }
-    .sidebar.open { transform: none; }
-    .main-content { padding: 20px; }
-    .empresa-stats { grid-template-columns: 1fr; }
+  /* ══ DETAIL PANEL ══ */
+  .detail-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65);
+    backdrop-filter: blur(4px); z-index: 500; align-items: flex-start; justify-content: flex-end;
   }
+  .detail-overlay.open { display: flex; }
+  .detail-panel {
+    width: 100%; max-width: 500px; height: 100vh; background: var(--surface);
+    border-left: 1px solid var(--border); overflow-y: auto; padding: 24px;
+    animation: slideIn .3s ease; -webkit-overflow-scrolling: touch;
+  }
+  @keyframes slideIn { from { transform: translateX(100%); } to { transform: none; } }
+  .detail-panel h2 { font-family: 'Syne', sans-serif; font-size: 1.2rem; margin-bottom: 4px; }
+  .detail-close {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--muted);
+    font-size: 1rem; cursor: pointer; padding: 5px 10px; border-radius: 7px;
+    transition: all .2s; line-height: 1.4;
+  }
+  .detail-close:hover { color: var(--text); background: var(--surface3); }
+  .detail-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+  .detail-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .detail-field label { font-size: .68rem; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 3px; display: block; }
+  .detail-field p { font-size: .87rem; }
+  .detail-desc { background: var(--surface2); border-radius: 9px; padding: 14px; font-size: .85rem; line-height: 1.6; color: var(--text2); margin-bottom: 18px; border: 1px solid var(--border); }
+  .status-select { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border2); background: var(--surface2); color: var(--text); font-family: inherit; font-size: .88rem; }
+
+  /* ══ CONSULTA PÚBLICA ══ */
+  .consulta-card { width: 100%; max-width: 720px; }
+  .tabs-pub { display: flex; margin-bottom: 20px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border2); }
+  .tab-pub { flex: 1; padding: 11px; text-align: center; cursor: pointer; font-size: .87rem; font-weight: 600; color: var(--muted); background: var(--surface); transition: all .2s; border: none; font-family: inherit; }
+  .tab-pub.active { background: var(--accent); color: #fff; }
+  .ticket-result-card {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px; margin-bottom: 10px; cursor: pointer; transition: border-color .2s;
+  }
+  .ticket-result-card:hover { border-color: rgba(108,99,255,.3); }
+  .ticket-result-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+  .ticket-result-num { font-size: .72rem; color: var(--muted); font-weight: 700; }
+  .ticket-result-asunto { font-weight: 600; font-size: .92rem; margin-bottom: 3px; }
+  .ticket-result-meta { font-size: .78rem; color: var(--muted); }
+  .solucion-box { background: rgba(46,213,115,.07); border: 1px solid rgba(46,213,115,.18); border-radius: 9px; padding: 12px 14px; margin-top: 10px; }
+  .solucion-box .sol-label { font-size: .68rem; font-weight: 700; color: var(--success); text-transform: uppercase; margin-bottom: 5px; }
+  .solucion-box p { font-size: .85rem; line-height: 1.6; color: var(--text2); }
+  .solucion-panel { background: rgba(46,213,115,.06); border: 1px solid rgba(46,213,115,.18); border-radius: 9px; padding: 14px; margin-bottom: 18px; }
+  .solucion-panel .sol-title { font-size: .7rem; font-weight: 700; color: var(--success); text-transform: uppercase; margin-bottom: 7px; }
+
+  /* ══ MOBILE BOTTOM NAV ══ */
+  .mobile-bottom-nav {
+    display: none; position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--surface); border-top: 1px solid var(--border);
+    padding: 6px 0 max(6px, env(safe-area-inset-bottom)); z-index: 200;
+    backdrop-filter: blur(10px);
+  }
+  .mobile-bottom-nav-inner { display: flex; }
+  .mob-nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; padding: 6px 4px; cursor: pointer; color: var(--muted);
+    font-size: .62rem; font-weight: 600; letter-spacing: .03em; text-transform: uppercase;
+    transition: color .2s; border: none; background: none; font-family: inherit;
+    -webkit-tap-highlight-color: transparent; position: relative;
+  }
+  .mob-nav-item .mob-icon { font-size: 1.2rem; line-height: 1; }
+  .mob-nav-item.active { color: var(--accent); }
+  .mob-nav-item .mob-badge {
+    position: absolute; top: 4px; right: calc(50% - 14px);
+    background: var(--danger); color: #fff; font-size: .6rem; font-weight: 700;
+    min-width: 16px; height: 16px; border-radius: 8px; display: flex;
+    align-items: center; justify-content: center; padding: 0 4px;
+  }
+
+  /* ══ RESPONSIVE ══ */
+  @media (max-width: 960px) {
+    .sidebar {
+      position: fixed; top: 0; left: 0; bottom: 0;
+      transform: translateX(-100%); z-index: 150;
+      padding-top: calc(var(--topbar-h) + 16px);
+    }
+    .sidebar.open { transform: translateX(0); box-shadow: 4px 0 40px rgba(0,0,0,.5); }
+    .mobile-topbar { display: flex; }
+    .mobile-bottom-nav { display: block; }
+    .main-content {
+      padding: 16px 14px 90px;
+      padding-top: calc(var(--topbar-h) + 16px);
+    }
+    .page-header h1 { font-size: 1.35rem; }
+    .empresa-stats { grid-template-columns: 1fr; gap: 10px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat-value { font-size: 1.7rem; }
+    .stat-card { padding: 14px; }
+    .table-filters { gap: 6px; }
+    .table-filters input { width: 140px; }
+  }
+
   @media (max-width: 600px) {
-    .pub-card { padding: 28px 20px; }
-    .form-row, .form-row-3 { grid-template-columns: 1fr; }
+    .pub-header { padding: 16px 0; }
+    .pub-logos img { height: 26px; }
+    .pub-card { padding: 20px 18px; }
+    .pub-card h1 { font-size: 1.4rem; }
+    .form-row, .form-row-3 { grid-template-columns: 1fr; gap: 0; }
+    .empresa-selector { grid-template-columns: 1fr; gap: 10px; }
+    .empresa-card { padding: 14px; display: flex; align-items: center; gap: 14px; text-align: left; }
+    .empresa-card .emp-logo { margin-bottom: 0; height: 44px; width: 64px; flex-shrink: 0; }
+    .empresa-card .emp-logo img { height: 40px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    #toast-container { bottom: 80px; right: 12px; left: 12px; }
+    .toast { min-width: unset; max-width: 100%; }
+    .modal { padding: 24px 18px; }
+    .detail-panel { max-width: 100%; border-left: none; border-top: 1px solid var(--border); }
+    .detail-overlay { align-items: flex-end; }
+    @keyframes slideIn { from { transform: translateY(100%); } to { transform: none; } }
+    .table-header { flex-direction: column; align-items: stretch; gap: 10px; }
+    .table-filters { flex-direction: column; gap: 8px; }
+    .table-filters input, .table-filters select { width: 100%; }
+    .page-header { flex-direction: column; align-items: flex-start; }
+    .actions-row { width: 100%; }
+    .actions-row .btn { flex: 1; justify-content: center; font-size: .8rem; padding: 9px 12px; }
+    .emp-filter-btns { grid-template-columns: repeat(4, 1fr); }
+    .detail-meta { grid-template-columns: 1fr; gap: 10px; }
+  }
+
+  @media (max-width: 400px) {
+    .empresa-selector { grid-template-columns: 1fr; }
     .stats-grid { grid-template-columns: 1fr 1fr; }
-    .empresa-selector { grid-template-columns: 1fr 1fr; }
+  }
+
+  .field-error {
+    color: var(--danger);
+    font-size: .72rem;
+    margin-top: 4px;
+    display: block;
+  }
+
+  .pagination-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .pagination-info {
+    font-size: .8rem;
+    color: var(--muted);
+  }
+
+  .pagination-buttons {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .config-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .config-section {
+    margin-bottom: 24px;
+  }
+
+  .config-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+  }
+
+  .stat-item {
+    background: var(--surface2);
+    padding: 16px;
+    border-radius: 10px;
+    text-align: center;
+  }
+
+  .stat-item-value {
+    font-size: 2rem;
+    font-weight: 700;
+  }
+
+  .stat-item-label {
+    font-size: .75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  input.error, select.error, textarea.error {
+    border-color: var(--danger) !important;
   }
 </style>
 </head>
 <body>
 
-<div id="loader"><div class="loader-ring"></div></div>
+<div id="loader">
+  <div class="loader-ring"></div>
+  <div class="loader-text">SupportDesk</div>
+  <div class="loader-info">Inicializando aplicación...</div>
+  <div class="loader-progress"><div class="loader-progress-bar" id="loader-progress" style="width:20%"></div></div>
+</div>
 <div id="toast-container"></div>
 
 <!-- ══════════════════════════════════════════
@@ -302,21 +620,21 @@
 ══════════════════════════════════════════ -->
 <div id="public-view">
   <div class="pub-header">
-    <div style="display:flex; align-items:center; gap:16px;">
-      <img src="logo-vehidiesel.png" style="height:40px; object-fit:contain;">
-      <div style="width:1px; height:30px; background:rgba(255,255,255,0.12);"></div>
-      <img src="logo-hb.png" style="height:36px; object-fit:contain;">
-      <div style="width:1px; height:30px; background:rgba(255,255,255,0.12);"></div>
-      <img src="logo-vehimotors.png" style="height:36px; object-fit:contain;">
+    <div class="pub-logos">
+      <img src="logo-vehidiesel.png" alt="Vehidiesel">
+      <div class="divider"></div>
+      <img src="logo-hb.png" alt="HB Y CIA">
+      <div class="divider"></div>
+      <img src="logo-vehimotors.png" alt="Vehimotors">
     </div>
     <button class="btn-login-link" onclick="openLoginModal()">Panel Admin →</button>
   </div>
 
   <!-- STEP 1: Selección de empresa -->
   <div id="step-empresa" style="width:100%;max-width:720px;">
-    <div style="text-align:center;margin-bottom:28px;">
-      <h1 style="font-family:'Syne',sans-serif;font-size:1.8rem;margin-bottom:8px;">¿De qué empresa eres?</h1>
-      <p style="color:var(--muted);">Selecciona tu empresa para continuar.</p>
+    <div class="pub-section-title">
+      <h1>¿De qué empresa eres?</h1>
+      <p>Selecciona tu empresa para continuar.</p>
     </div>
     <div class="empresa-selector">
       <div class="empresa-card" id="card-vehidiesel" onclick="selectEmpresa('vehidiesel')">
@@ -444,20 +762,36 @@
      DASHBOARD
 ══════════════════════════════════════════ -->
 <div id="dashboard-view">
+
+  <!-- Mobile topbar -->
+  <div class="mobile-topbar">
+    <div class="mobile-topbar-logo">SupportDesk</div>
+    <div class="mobile-topbar-right">
+      <div id="mob-empresa-pill" style="font-size:.72rem;"></div>
+      <button class="btn-hamburger" onclick="toggleSidebar()" aria-label="Menú">☰</button>
+    </div>
+  </div>
+
+  <!-- Sidebar overlay -->
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
   <div class="dash-layout">
     <aside class="sidebar" id="sidebar">
-      <div style="padding: 0 8px 20px; display:flex; flex-direction:column; gap:8px;">
-        <div style="padding:7px 10px; background:rgba(255,255,255,0.05); border-radius:9px; display:flex; align-items:center;">
-          <img src="logo-vehidiesel.png" style="height:26px; object-fit:contain; max-width:100%;">
+      <div class="sidebar-logos">
+        <div class="sidebar-logo-row">
+          <img src="logo-vehidiesel.png" alt="Vehidiesel">
         </div>
-        <div style="padding:7px 10px; background:rgba(255,255,255,0.05); border-radius:9px; display:flex; align-items:center;">
-          <img src="logo-hb.png" style="height:26px; object-fit:contain; max-width:100%;">
+        <div class="sidebar-logo-row">
+          <img src="logo-hb.png" alt="HB">
+        </div>
+        <div class="sidebar-logo-row">
+          <img src="logo-vehimotors.png" alt="Vehimotors">
         </div>
       </div>
 
       <!-- Filtro empresa -->
       <div class="sidebar-empresa-filter">
-        <div style="font-size:.72rem;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;padding:0 4px 8px;">Filtrar por empresa</div>
+        <span class="sidebar-filter-label">Filtrar por empresa</span>
         <div class="emp-filter-btns">
           <button class="emp-filter-btn active-all" id="efbtn-all" onclick="setEmpresaFilter('')">Todas</button>
           <button class="emp-filter-btn" id="efbtn-vehidiesel" onclick="setEmpresaFilter('vehidiesel')"><img src="logo-vehidiesel.png" style="height:13px;object-fit:contain;vertical-align:middle;"> VD</button>
@@ -479,6 +813,7 @@
       <div class="nav-section">
         <div class="nav-section-title">Administración</div>
         <div class="nav-item" onclick="showPage('usuarios')" data-page="usuarios"><span class="icon">👥</span> Usuarios</div>
+        <div class="nav-item" onclick="showPage('config')" data-page="config"><span class="icon">⚙️</span> Configuración</div>
       </div>
 
       <div class="sidebar-footer">
@@ -562,7 +897,15 @@
       <div class="page" id="page-tickets">
         <div class="page-header">
           <div><h1>🎫 Tickets</h1><p>Gestión de solicitudes y soporte</p></div>
-          <button class="btn btn-ghost" onclick="exportTickets()">📥 Exportar Excel</button>
+          <div class="actions-row">
+            <button class="btn btn-ghost" onclick="exportTickets()">📥 Exportar Excel</button>
+            <select id="filter-empresa-tickets" onchange="filterTickets()" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:inherit;font-size:.82rem;">
+              <option value="">Todas</option>
+              <option value="vehidiesel">Vehidiesel</option>
+              <option value="hb">HB Y CIA</option>
+              <option value="vehimotors">Vehimotors</option>
+            </select>
+          </div>
         </div>
         <div class="table-card">
           <div class="table-header">
@@ -575,12 +918,6 @@
                 <option value="en_progreso">En Progreso</option>
                 <option value="cerrado">Cerrado</option>
               </select>
-              <select id="filter-empresa-tickets" onchange="filterTickets()">
-                <option value="">Todas las empresas</option>
-                <option value="vehidiesel">Vehidiesel</option>
-                <option value="hb">HB Y CIA</option>
-              <option value="vehimotors">Vehimotors</option>
-              </select>
             </div>
           </div>
           <div class="data-table-wrapper">
@@ -589,6 +926,7 @@
               <tbody id="tickets-tbody"></tbody>
             </table>
           </div>
+          <div id="tickets-pagination"></div>
         </div>
       </div>
 
@@ -671,6 +1009,7 @@
               <tbody id="assets-tbody"></tbody>
             </table>
           </div>
+          <div id="assets-pagination"></div>
         </div>
       </div>
 
@@ -750,6 +1089,7 @@
               <tbody id="maints-tbody"></tbody>
             </table>
           </div>
+          <div id="maints-pagination"></div>
         </div>
       </div>
 
@@ -790,12 +1130,122 @@
         </div>
       </div>
 
+      <!-- ── CONFIGURACIÓN ── -->
+      <div class="page" id="page-config">
+        <div class="page-header">
+          <div><h1>⚙️ Configuración</h1><p>Configuración del sistema y respaldo de datos</p></div>
+        </div>
+
+        <div class="form-card">
+          <h3>🔥 Configuración de Firebase</h3>
+          <p style="color:var(--muted);font-size:.85rem;margin-bottom:18px;">
+            Ingresa tu configuración de Firebase. Los datos se guardan en localStorage de forma segura.
+          </p>
+          <div class="form-row">
+            <div class="form-group"><label>API Key</label><input type="text" id="cfg-apiKey" placeholder="AIzaSy..."></div>
+            <div class="form-group"><label>Auth Domain</label><input type="text" id="cfg-authDomain" placeholder="tu-proyecto.firebaseapp.com"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Database URL</label><input type="text" id="cfg-databaseURL" placeholder="https://tu-proyecto.firebaseio.com"></div>
+            <div class="form-group"><label>Project ID</label><input type="text" id="cfg-projectId" placeholder="tu-proyecto"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Storage Bucket</label><input type="text" id="cfg-storageBucket" placeholder="tu-proyecto.appspot.com"></div>
+            <div class="form-group"><label>Messaging Sender ID</label><input type="text" id="cfg-messagingSenderId" placeholder="123456789"></div>
+          </div>
+          <div class="form-group"><label>App ID</label><input type="text" id="cfg-appId" placeholder="1:123456789:web:abc123"></div>
+          <div class="actions-row">
+            <button class="btn btn-primary" onclick="saveFirebaseConfigFromForm()">💾 Guardar Configuración</button>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h3>💾 Backup Local</h3>
+          <p style="color:var(--muted);font-size:.85rem;margin-bottom:18px;">
+            Los datos se respaldan automáticamente en el navegador. Puedes activar/desactivar esta función.
+          </p>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <label class="toggle-switch">
+              <input type="checkbox" id="cfg-backup-enabled" onchange="toggleBackup(this.checked)">
+              <span style="display:inline-block;width:44px;height:24px;background:var(--surface3);border-radius:12px;position:relative;cursor:pointer;transition:background .2s;">
+                <span style="position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform .2s;" id="cfg-backup-slider"></span>
+              </span>
+            </label>
+            <span id="cfg-backup-status">Backup local desactivado</span>
+          </div>
+          <div id="cfg-backup-info" style="display:none;margin-bottom:16px;padding:12px;background:var(--surface2);border-radius:8px;">
+            <p style="font-size:.82rem;color:var(--muted);">📦 Backups guardados: <span id="cfg-backup-count">0</span> | Tamaño: <span id="cfg-backup-size">0 KB</span></p>
+          </div>
+          <div class="actions-row">
+            <button class="btn btn-ghost" onclick="restoreFromBackup()">🔄 Restaurar desde Backup</button>
+            <button class="btn btn-danger" onclick="clearBackups()">🗑 Limpiar Backups</button>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h3>📊 Estadísticas de Datos</h3>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;">
+            <div style="background:var(--surface2);padding:16px;border-radius:10px;text-align:center;">
+              <div style="font-size:2rem;font-weight:700;color:var(--accent);" id="cfg-stat-tickets">0</div>
+              <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;">Tickets</div>
+            </div>
+            <div style="background:var(--surface2);padding:16px;border-radius:10px;text-align:center;">
+              <div style="font-size:2rem;font-weight:700;color:var(--success);" id="cfg-stat-assets">0</div>
+              <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;">Activos</div>
+            </div>
+            <div style="background:var(--surface2);padding:16px;border-radius:10px;text-align:center;">
+              <div style="font-size:2rem;font-weight:700;color:var(--warning);" id="cfg-stat-maints">0</div>
+              <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;">Mantenimientos</div>
+            </div>
+            <div style="background:var(--surface2);padding:16px;border-radius:10px;text-align:center;">
+              <div style="font-size:2rem;font-weight:700;color:var(--accent2);" id="cfg-stat-users">0</div>
+              <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;">Usuarios</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h3>ℹ️ Información del Sistema</h3>
+          <div style="font-size:.85rem;color:var(--text2);line-height:1.8;">
+            <p><strong>Versión:</strong> <span id="cfg-version">1.0.0</span></p>
+            <p><strong>Última actualización:</strong> <span id="cfg-last-update">—</span></p>
+            <p><strong>Navegador:</strong> <span id="cfg-browser"></span></p>
+            <p><strong>Firebase:</strong> <span id="cfg-firebase-status">No configurado</span></p>
+          </div>
+        </div>
+      </div>
+
     </main>
   </div>
+
+  <!-- Mobile bottom navigation -->
+  <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
+    <div class="mobile-bottom-nav-inner">
+      <button class="mob-nav-item active" id="mobnav-home" onclick="showPage('home');setActiveMobNav('home')" data-page="home">
+        <span class="mob-icon">🏠</span>Dashboard
+      </button>
+      <button class="mob-nav-item" id="mobnav-tickets" onclick="showPage('tickets');setActiveMobNav('tickets')" data-page="tickets">
+        <span class="mob-icon">🎫</span>Tickets
+        <span class="mob-badge" id="mob-badge-tickets" style="display:none">0</span>
+      </button>
+      <button class="mob-nav-item" id="mobnav-activos" onclick="showPage('activos');setActiveMobNav('activos')" data-page="activos">
+        <span class="mob-icon">🖥</span>Activos
+      </button>
+      <button class="mob-nav-item" id="mobnav-mantenimientos" onclick="showPage('mantenimientos');setActiveMobNav('mantenimientos')" data-page="mantenimientos">
+        <span class="mob-icon">🔧</span>Mant.
+      </button>
+      <button class="mob-nav-item" id="mobnav-usuarios" onclick="showPage('usuarios');setActiveMobNav('usuarios')" data-page="usuarios">
+        <span class="mob-icon">👥</span>Usuarios
+      </button>
+      <button class="mob-nav-item" id="mobnav-config" onclick="showPage('config');setActiveMobNav('config')" data-page="config">
+        <span class="mob-icon">⚙️</span>Config
+      </button>
+    </div>
+  </nav>
 </div>
 
 <!-- ══════════════════════════════════════════
-     FIREBASE
+     CONFIG & FIREBASE
 ══════════════════════════════════════════ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -804,29 +1254,307 @@ import { getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPas
 import { getDatabase, ref, push, set, get, onValue, update, remove }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-// 🔥 REEMPLAZA CON TU CONFIG DE FIREBASE
-const firebaseConfig = {
-
+const LEGACY_FIREBASE_CONFIG = {
   apiKey: "AIzaSyDrWkNSk5-XMmyPIYGS9BDhr6s55q09uW0",
-
   authDomain: "sistema-60974.firebaseapp.com",
-
   databaseURL: "https://sistema-60974-default-rtdb.firebaseio.com",
-
   projectId: "sistema-60974",
-
   storageBucket: "sistema-60974.firebasestorage.app",
-
   messagingSenderId: "114323927687",
-
   appId: "1:114323927687:web:508b7a27484df171043e22"
-
 };
 
+if (!localStorage.getItem('sd_firebase_config')) {
+  localStorage.setItem('sd_firebase_config', JSON.stringify(LEGACY_FIREBASE_CONFIG));
+}
 
-const app  = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db   = getDatabase(app);
+function getFirebaseConfig() {
+  const stored = localStorage.getItem('sd_firebase_config');
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      if (parsed.apiKey && parsed.databaseURL) return parsed;
+    } catch (e) { console.warn('Config inválida'); }
+  }
+  return LEGACY_FIREBASE_CONFIG;
+}
+
+function saveFirebaseConfig(config) {
+  localStorage.setItem('sd_firebase_config', JSON.stringify(config));
+  showToast('Configuración guardada. Recarga la página.', 'success');
+}
+
+window.saveFirebaseConfig = saveFirebaseConfig;
+
+const firebaseConfig = getFirebaseConfig();
+
+// ── XLSX LOAD CHECK ──
+let xlsxLoaded = false;
+window.checkXlsx = () => {
+  if (typeof XLSX !== 'undefined') {
+    xlsxLoaded = true;
+    return true;
+  }
+  return false;
+};
+if (typeof XLSX !== 'undefined') xlsxLoaded = true;
+
+if (!firebaseConfig.apiKey) {
+  console.warn('⚠️ Firebase no configurado. Ve a Admin > Configuración para configurar.');
+}
+
+
+const app  = firebaseConfig.apiKey ? initializeApp(firebaseConfig) : null;
+const auth = app ? getAuth(app) : null;
+const db   = app ? getDatabase(app) : null;
+
+// ── LOCAL STORAGE BACKUP ──
+const LS_PREFIX = 'sd_backup_';
+const LS_ENABLED_KEY = 'sd_backup_enabled';
+const BACKUP_INTERVAL = 30000;
+
+function isBackupEnabled() {
+  return localStorage.getItem(LS_ENABLED_KEY) === 'true';
+}
+
+function setBackupEnabled(enabled) {
+  localStorage.setItem(LS_ENABLED_KEY, enabled ? 'true' : 'false');
+}
+
+function saveBackup(key, data) {
+  if (!isBackupEnabled()) return;
+  try {
+    localStorage.setItem(LS_PREFIX + key, JSON.stringify({
+      data,
+      timestamp: Date.now()
+    }));
+  } catch (e) {
+    console.warn('Backup local lleno:', e.message);
+    showToast('Backup local lleno. Datos no guardados.', 'error');
+  }
+}
+
+function loadBackup(key) {
+  if (!isBackupEnabled()) return null;
+  try {
+    const stored = localStorage.getItem(LS_PREFIX + key);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return parsed.data;
+    }
+  } catch (e) {}
+  return null;
+}
+
+function clearAllBackups() {
+  Object.keys(localStorage).forEach(key => {
+    if (key.startsWith(LS_PREFIX)) localStorage.removeItem(key);
+  });
+}
+
+function getBackupInfo() {
+  const keys = Object.keys(localStorage).filter(k => k.startsWith(LS_PREFIX));
+  let totalSize = 0;
+  keys.forEach(k => { totalSize += localStorage.getItem(k)?.length || 0; });
+  return { count: keys.length, sizeKB: (totalSize / 1024).toFixed(1) };
+}
+
+// ── ADVANCED VALIDATION ──
+const VALIDATORS = {
+  email: (v) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(v) ? '' : 'Correo electrónico inválido';
+  },
+  required: (v) => v.trim() ? '' : 'Este campo es obligatorio',
+  minLength: (v, len) => v.length >= len ? '' : `Mínimo ${len} caracteres`,
+  maxLength: (v, len) => v.length <= len ? '' : `Máximo ${len} caracteres`,
+  phone: (v) => {
+    if (!v) return '';
+    const re = /^[\d\s\+\-\(\)]{7,20}$/;
+    return re.test(v) ? '' : 'Teléfono inválido';
+  },
+  password: (v) => {
+    if (v.length < 6) return 'La contraseña debe tener al menos 6 caracteres';
+    if (v.length > 128) return 'Contraseña demasiado larga';
+    return '';
+  },
+  number: (v) => !v || !isNaN(v) ? '' : 'Debe ser un número válido',
+  positiveNumber: (v) => {
+    if (!v) return '';
+    const n = parseFloat(v);
+    return n >= 0 ? '' : 'Debe ser un número positivo';
+  }
+};
+
+function validateField(value, rules) {
+  for (const rule of rules) {
+    const [ruleName, ruleParam] = Array.isArray(rule) ? rule : [rule, null];
+    const validator = VALIDATORS[ruleName];
+    if (validator) {
+      const error = validator(value, ruleParam);
+      if (error) return error;
+    }
+  }
+  return '';
+}
+
+function validateForm(formId, fieldRules) {
+  const form = document.getElementById(formId);
+  if (!form) return true;
+  let isValid = true;
+  const errors = {};
+  
+  Object.entries(fieldRules).forEach(([fieldId, rules]) => {
+    const el = document.getElementById(fieldId);
+    if (!el) return;
+    const value = el.value || '';
+    const error = validateField(value, rules);
+    if (error) {
+      isValid = false;
+      errors[fieldId] = error;
+      el.style.borderColor = 'var(--danger)';
+    } else {
+      el.style.borderColor = '';
+    }
+  });
+  
+  return { isValid, errors };
+}
+
+function showFieldError(fieldId, message) {
+  const el = document.getElementById(fieldId);
+  if (!el) return;
+  removeFieldError(fieldId);
+  const errorEl = document.createElement('div');
+  errorEl.className = 'field-error';
+  errorEl.style.cssText = 'color:var(--danger);font-size:.72rem;margin-top:4px;';
+  errorEl.textContent = message;
+  el.parentNode.appendChild(errorEl);
+  el.style.borderColor = 'var(--danger)';
+}
+
+function removeFieldError(fieldId) {
+  const el = document.getElementById(fieldId);
+  if (!el) return;
+  el.style.borderColor = '';
+  const parent = el.parentNode;
+  const error = parent.querySelector('.field-error');
+  if (error) error.remove();
+}
+
+function clearAllFieldErrors(formId) {
+  const form = document.getElementById(formId);
+  if (!form) return;
+  form.querySelectorAll('.field-error').forEach(e => e.remove());
+  form.querySelectorAll('input, select, textarea').forEach(el => {
+    el.style.borderColor = '';
+  });
+}
+
+// ── PAGINATION ──
+class Paginator {
+  constructor(containerId, rowsPerPage = 10) {
+    this.containerId = containerId;
+    this.rowsPerPage = rowsPerPage;
+    this.currentPage = 1;
+    this.totalRows = 0;
+    this.data = [];
+    this.renderFn = null;
+  }
+  
+  setData(data, renderFn) {
+    this.data = data;
+    this.totalRows = data.length;
+    this.renderFn = renderFn;
+    this.currentPage = 1;
+    this.render();
+  }
+  
+  get totalPages() {
+    return Math.ceil(this.totalRows / this.rowsPerPage);
+  }
+  
+  get startIndex() {
+    return (this.currentPage - 1) * this.rowsPerPage;
+  }
+  
+  get endIndex() {
+    return Math.min(this.startIndex + this.rowsPerPage, this.totalRows);
+  }
+  
+  getPageData() {
+    return this.data.slice(this.startIndex, this.endIndex);
+  }
+  
+  goToPage(page) {
+    if (page < 1 || page > this.totalPages) return;
+    this.currentPage = page;
+    this.render();
+  }
+  
+  nextPage() { this.goToPage(this.currentPage + 1); }
+  prevPage() { this.goToPage(this.currentPage - 1); }
+  
+  render() {
+    if (!this.renderFn) return;
+    this.renderFn(this.getPageData());
+    this.renderControls();
+  }
+  
+  renderControls() {
+    const container = document.getElementById(this.containerId + '-pagination');
+    if (!container) return;
+    
+    const totalPages = this.totalPages;
+    const current = this.currentPage;
+    
+    let pages = [];
+    if (totalPages <= 7) {
+      pages = Array.from({length: totalPages}, (_, i) => i + 1);
+    } else {
+      if (current <= 4) {
+        pages = [1, 2, 3, 4, 5, '...', totalPages];
+      } else if (current >= totalPages - 3) {
+        pages = [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+      } else {
+        pages = [1, '...', current - 1, current, current + 1, '...', totalPages];
+      }
+    }
+    
+    container.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--border);flex-wrap:wrap;gap:10px;">
+        <span style="font-size:.8rem;color:var(--muted);">Mostrando ${this.startIndex + 1}-${this.endIndex} de ${this.totalRows}</span>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <button class="btn btn-ghost btn-sm" onclick="${this.containerId}_paginator.prevPage()" ${current === 1 ? 'disabled' : ''}>‹</button>
+          ${pages.map(p => p === '...' 
+            ? '<span style="padding:0 6px;color:var(--muted);">...</span>'
+            : `<button class="btn btn-sm ${p === current ? 'btn-primary' : 'btn-ghost'}" onclick="${this.containerId}_paginator.goToPage(${p})">${p}</button>`
+          ).join('')}
+          <button class="btn btn-ghost btn-sm" onclick="${this.containerId}_paginator.nextPage()" ${current === totalPages ? 'disabled' : ''}>›</button>
+        </div>
+      </div>
+    `;
+  }
+}
+
+window.Paginator = Paginator;
+
+// ── TOAST (nueva versión con mejor UX) ──
+function showToast(msg, type = 'info') {
+  const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span style="font-size:1.1rem">${icons[type]}</span><span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(16px)';
+    el.style.transition = 'all .3s';
+    setTimeout(() => el.remove(), 300);
+  }, 4000);
+}
+
+window.showToast = showToast;
 
 // ── STATE ──
 let currentUser    = null;
@@ -835,8 +1563,15 @@ let allTickets     = [];
 let allAssets      = [];
 let allMaints      = [];
 let allUsers       = [];
-let selectedEmpresa = '';       // filtro activo en admin
-let publicEmpresa   = '';       // empresa elegida en form público
+let selectedEmpresa = '';
+let publicEmpresa   = '';
+let filteredTickets = [];
+let filteredAssets  = [];
+let filteredMaints = [];
+
+const ticketsPaginator = new Paginator('tickets', 15);
+const assetsPaginator = new Paginator('assets', 15);
+const maintsPaginator = new Paginator('maints', 15);
 
 const EMPRESAS = {
   vehidiesel: { label: 'Vehidiesel S.A.S', icon: '🚛' },
@@ -845,14 +1580,7 @@ const EMPRESAS = {
 };
 
 // ── HELPERS ──
-function toast(msg, type='info') {
-  const icons = { success:'✅', error:'❌', info:'ℹ️' };
-  const el = document.createElement('div');
-  el.className = `toast ${type}`;
-  el.innerHTML = `<span style="font-size:1.1rem">${icons[type]}</span><span>${msg}</span>`;
-  document.getElementById('toast-container').appendChild(el);
-  setTimeout(() => el.remove(), 3500);
-}
+const toast = showToast;
 
 function fmtDate(ts) {
   if (!ts) return '—';
@@ -892,37 +1620,72 @@ function empPill(e) {
   return `<span class="emp-pill ${e}"><img src="${logo}" style="height:14px;object-fit:contain;vertical-align:middle;"> ${cfg?.label||e}</span>`;
 }
 
-function hideLoader() { document.getElementById('loader').classList.add('hide'); }
+function hideLoader() { 
+  const progress = document.getElementById('loader-progress');
+  if (progress) progress.style.width = '100%';
+  setTimeout(() => { 
+    const loader = document.getElementById('loader');
+    if (loader) loader.classList.add('hide'); 
+  }, 300);
+}
+
+setTimeout(() => {
+  const loader = document.getElementById('loader');
+  if (loader && !loader.classList.contains('hide')) {
+    console.warn('Timeout de carga. Forzando ocultamiento del loader.');
+    loader.classList.add('hide');
+    showPublic();
+    showToast('La aplicación se cargó en modo offline', 'warning');
+  }
+}, 8000);
 
 // ── AUTH ──
 window.openLoginModal  = () => document.getElementById('login-modal').classList.add('open');
 window.closeLoginModal = () => document.getElementById('login-modal').classList.remove('open');
 
 window.doLogin = async () => {
+  if (!auth) return showToast('Firebase no configurado. Ve a Configuración.', 'error');
   const email = document.getElementById('login-email').value.trim();
   const pass  = document.getElementById('login-pass').value;
-  if (!email || !pass) return toast('Completa todos los campos', 'error');
+  if (!email || !pass) return showToast('Completa todos los campos', 'error');
   try {
     await signInWithEmailAndPassword(auth, email, pass);
     closeLoginModal();
-  } catch { toast('Credenciales incorrectas', 'error'); }
+  } catch (e) {
+    const messages = {
+      'auth/user-not-found': 'Usuario no encontrado',
+      'auth/wrong-password': 'Contraseña incorrecta',
+      'auth/invalid-email': 'Correo electrónico inválido',
+      'auth/too-many-requests': 'Demasiados intentos. Intenta más tarde.'
+    };
+    showToast(messages[e.code] || 'Credenciales incorrectas', 'error');
+  }
 };
 
-window.doLogout = async () => { await signOut(auth); toast('Sesión cerrada', 'info'); };
+window.doLogout = async () => { 
+  if (auth) await signOut(auth); 
+  toast('Sesión cerrada', 'info'); 
+};
 
-onAuthStateChanged(auth, async user => {
-  if (user) {
-    currentUser = user;
-    const snap = await get(ref(db, `users/${user.uid}`));
-    currentProfile = snap.val() || { nombre: user.email, rol: 'agent' };
-    showDashboard();
-    loadAllData();
-  } else {
-    currentUser = null; currentProfile = null;
-    showPublic();
-  }
+if (auth) {
+  onAuthStateChanged(auth, async user => {
+    if (user) {
+      currentUser = user;
+      const snap = await get(ref(db, `users/${user.uid}`));
+      currentProfile = snap.val() || { nombre: user.email, rol: 'agent' };
+      showDashboard();
+      loadAllData();
+    } else {
+      currentUser = null; currentProfile = null;
+      showPublic();
+    }
+    hideLoader();
+  });
+} else {
+  showPublic();
+  loadAllData();
   hideLoader();
-});
+}
 
 function showPublic() {
   document.getElementById('public-view').style.display = 'flex';
@@ -1010,6 +1773,22 @@ window.showPage = (page) => {
 
 // ── LOAD DATA ──
 function loadAllData() {
+  if (!db) {
+    const backupTickets = loadBackup('tickets');
+    const backupAssets = loadBackup('assets');
+    const backupMaints = loadBackup('maints');
+    const backupUsers = loadBackup('users');
+    if (backupTickets) { allTickets = backupTickets; filterTickets(); }
+    if (backupAssets) { allAssets = backupAssets; filterAssets(); }
+    if (backupMaints) { allMaints = backupMaints; filterMaints(); }
+    if (backupUsers) renderUsers();
+    renderDashboardStats();
+    if (backupTickets || backupAssets || backupMaints) {
+      showToast('Datos cargados desde backup local', 'info');
+    }
+    return;
+  }
+
   onValue(ref(db, 'tickets'), snap => {
     allTickets = [];
     const val = snap.val();
@@ -1019,6 +1798,7 @@ function loadAllData() {
       });
     }
     allTickets.sort((a, b) => (b.createdAt||0) - (a.createdAt||0));
+    saveBackup('tickets', allTickets);
     renderDashboardStats(); filterTickets(); updateBadge();
   });
   onValue(ref(db, 'assets'), snap => {
@@ -1031,6 +1811,7 @@ function loadAllData() {
         }
       });
     }
+    saveBackup('assets', allAssets);
     renderDashboardStats(); filterAssets();
   });
   onValue(ref(db, 'maintenances'), snap => {
@@ -1042,6 +1823,7 @@ function loadAllData() {
       });
     }
     allMaints.sort((a,b) => (b.createdAt||0)-(a.createdAt||0));
+    saveBackup('maints', allMaints);
     renderDashboardStats(); filterMaints();
   });
   onValue(ref(db, 'users'), snap => {
@@ -1052,6 +1834,7 @@ function loadAllData() {
         if (data && typeof data === 'object') allUsers.push({ id: key, ...data });
       });
     }
+    saveBackup('users', allUsers);
     renderUsers(); renderDashboardStats();
   });
 }
@@ -1102,10 +1885,6 @@ function renderDashboardStats() {
     : `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🎫</div><p>Sin tickets aún</p></div></td></tr>`;
 }
 
-function updateBadge() {
-  document.getElementById('badge-tickets').textContent = allTickets.filter(t => t.estado==='abierto').length;
-}
-
 // ── PUBLIC TICKET ──
 window.submitPublicTicket = async () => {
   if (!publicEmpresa) return toast('Selecciona una empresa primero', 'error');
@@ -1149,17 +1928,18 @@ window.resetTicketForm = () => {
 
 // ── TICKETS TABLE ──
 window.filterTickets = () => {
-  const q   = document.getElementById('search-tickets').value.toLowerCase();
-  const st  = document.getElementById('filter-status').value;
+  const q   = document.getElementById('search-tickets')?.value.toLowerCase() || '';
+  const st  = document.getElementById('filter-status')?.value || '';
   const emp = document.getElementById('filter-empresa-tickets')?.value || selectedEmpresa;
-  renderTickets(allTickets.filter(t =>
+  filteredTickets = allTickets.filter(t =>
     (!st  || t.estado === st) &&
     (!emp || t.empresa === emp) &&
     (!q   || t.asunto?.toLowerCase().includes(q) || t.nombre?.toLowerCase().includes(q) || (t.numero||'').includes(q))
-  ));
+  );
+  ticketsPaginator.setData(filteredTickets, renderTickets);
 };
 
-function renderTickets(list = allTickets) {
+function renderTickets(list) {
   const tbody = document.getElementById('tickets-tbody');
   tbody.innerHTML = list.length
     ? list.map(t => `<tr>
@@ -1227,17 +2007,23 @@ window.viewTicket = (id) => {
 };
 
 window.updateTicketStatus = async (id) => {
+  if (!db) return showToast('Firebase no configurado', 'error');
+  
   const estado = document.getElementById('ticket-status-sel').value;
   const data = { estado };
   if (estado === 'cerrado') {
     const sol = document.getElementById('ticket-solucion-txt')?.value?.trim();
-    if (!sol) return toast('Debes registrar la solución para cerrar el ticket', 'error');
+    if (!sol) return showToast('Debes registrar la solución para cerrar el ticket', 'error');
     data.solucion = sol;
     data.fechaCierre = Date.now();
   }
-  await update(ref(db, `tickets/${id}`), data);
-  closeDetail();
-  toast(estado === 'cerrado' ? '✅ Ticket cerrado con solución' : 'Estado actualizado', 'success');
+  try {
+    await update(ref(db, `tickets/${id}`), data);
+    closeDetail();
+    showToast(estado === 'cerrado' ? 'Ticket cerrado con solución' : 'Estado actualizado', 'success');
+  } catch (e) {
+    showToast('Error al actualizar ticket', 'error');
+  }
 };
 
 window.toggleSolucionField = (val) => {
@@ -1246,9 +2032,14 @@ window.toggleSolucionField = (val) => {
 };
 
 window.deleteTicket = async (id) => {
+  if (!db) return showToast('Firebase no configurado', 'error');
   if (!confirm('¿Eliminar este ticket?')) return;
-  await remove(ref(db, `tickets/${id}`));
-  toast('Ticket eliminado', 'success');
+  try {
+    await remove(ref(db, `tickets/${id}`));
+    showToast('Ticket eliminado', 'success');
+  } catch (e) {
+    showToast('Error al eliminar ticket', 'error');
+  }
 };
 
 window.closeDetail = () => document.getElementById('detail-overlay').classList.remove('open');
@@ -1292,26 +2083,23 @@ window.saveAsset = async () => {
 };
 
 window.filterAssets = () => {
-  const q   = document.getElementById('search-assets').value.toLowerCase();
+  const q   = document.getElementById('search-assets')?.value.toLowerCase() || '';
   const emp = document.getElementById('filter-empresa-assets')?.value || selectedEmpresa;
-  renderAssets(allAssets.filter(a =>
+  filteredAssets = allAssets.filter(a =>
     (!emp || a.empresa === emp) &&
     (!q   || a.nombre?.toLowerCase().includes(q) || a.serial?.toLowerCase().includes(q) || a.tipo?.toLowerCase().includes(q))
-  ));
+  );
+  assetsPaginator.setData(filteredAssets, renderAssets);
 };
 
-function renderAssets(list = allAssets) {
+function renderAssets(list) {
   const tbody = document.getElementById('assets-tbody');
-  if (!list.length) {
+  if (!list || !list.length) {
     tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🖥</div><p>Sin activos registrados</p></div></td></tr>`;
     return;
   }
-  // Build rows one by one to avoid any innerHTML truncation issues
-  tbody.innerHTML = '';
-  list.forEach(a => {
-    const tr = document.createElement('tr');
-    tr.style.cssText = 'display:table-row;border-bottom:1px solid rgba(255,255,255,.04);';
-    tr.innerHTML = `
+  tbody.innerHTML = list.map(a => `
+    <tr style="border-bottom:1px solid rgba(255,255,255,.04);">
       <td style="padding:14px 16px;vertical-align:middle;">${empPill(a.empresa)}</td>
       <td style="padding:14px 16px;vertical-align:middle;"><strong>${a.nombre}</strong></td>
       <td style="padding:14px 16px;vertical-align:middle;font-size:.82rem">${a.tipo||'—'}</td>
@@ -1324,9 +2112,8 @@ function renderAssets(list = allAssets) {
           <button class="btn btn-ghost btn-sm" onclick="editAsset('${a.id}')">✏️</button>
           <button class="btn btn-danger btn-sm" onclick="deleteAsset('${a.id}')">🗑</button>
         </div>
-      </td>`;
-    tbody.appendChild(tr);
-  });
+      </td>
+    </tr>`).join('');
 }
 
 window.editAsset = (id) => {
@@ -1347,9 +2134,14 @@ window.editAsset = (id) => {
 };
 
 window.deleteAsset = async (id) => {
+  if (!db) return showToast('Firebase no configurado', 'error');
   if (!confirm('¿Eliminar este activo?')) return;
-  await remove(ref(db, `assets/${id}`));
-  toast('Activo eliminado', 'success');
+  try {
+    await remove(ref(db, `assets/${id}`));
+    showToast('Activo eliminado', 'success');
+  } catch (e) {
+    showToast('Error al eliminar activo', 'error');
+  }
 };
 
 // ── MAINTENANCES ──
@@ -1403,17 +2195,18 @@ window.saveMaint = async () => {
 };
 
 window.filterMaints = () => {
-  const q   = document.getElementById('search-maint').value.toLowerCase();
+  const q   = document.getElementById('search-maint')?.value.toLowerCase() || '';
   const emp = document.getElementById('filter-empresa-maint')?.value || selectedEmpresa;
-  renderMaints(allMaints.filter(m =>
+  filteredMaints = allMaints.filter(m =>
     (!emp || m.empresa === emp) &&
     (!q   || m.activoNombre?.toLowerCase().includes(q) || m.tipo?.toLowerCase().includes(q) || m.tecnico?.toLowerCase().includes(q))
-  ));
+  );
+  maintsPaginator.setData(filteredMaints, renderMaints);
 };
 
-function renderMaints(list = allMaints) {
+function renderMaints(list) {
   const tbody = document.getElementById('maints-tbody');
-  tbody.innerHTML = list.length
+  tbody.innerHTML = list && list.length
     ? list.map(m => `<tr>
         <td>${empPill(m.empresa)}</td>
         <td><strong>${m.activoNombre||'—'}</strong></td>
@@ -1449,9 +2242,14 @@ window.editMaint = (id) => {
 };
 
 window.deleteMaint = async (id) => {
+  if (!db) return showToast('Firebase no configurado', 'error');
   if (!confirm('¿Eliminar este mantenimiento?')) return;
-  await remove(ref(db, `maintenances/${id}`));
-  toast('Mantenimiento eliminado', 'success');
+  try {
+    await remove(ref(db, `maintenances/${id}`));
+    showToast('Mantenimiento eliminado', 'success');
+  } catch (e) {
+    showToast('Error al eliminar mantenimiento', 'error');
+  }
 };
 
 // ── USERS ──
@@ -1529,6 +2327,8 @@ function downloadXlsx(wb, filename) {
 }
 
 window.exportTickets = () => {
+  if (!xlsxLoaded && typeof XLSX === 'undefined') return showToast('Biblioteca de exportación no disponible', 'error');
+  
   const emp = document.getElementById('filter-empresa-tickets')?.value || selectedEmpresa;
   const st  = document.getElementById('filter-status')?.value || '';
   const q   = document.getElementById('search-tickets')?.value?.toLowerCase() || '';
@@ -1539,7 +2339,7 @@ window.exportTickets = () => {
     (!q   || t.asunto?.toLowerCase().includes(q) || t.nombre?.toLowerCase().includes(q))
   );
 
-  if (!data.length) return toast('No hay tickets para exportar', 'error');
+  if (!data.length) return showToast('No hay tickets para exportar', 'error');
 
   const statusLabels = { abierto:'Abierto', en_progreso:'En Progreso', cerrado:'Cerrado' };
   const rows = data.map(t => ({
@@ -1568,10 +2368,12 @@ window.exportTickets = () => {
   const empLabel = emp ? (emp === 'vehidiesel' ? 'Vehidiesel' : 'HB') : 'Todas';
   const fecha = new Date().toISOString().slice(0,10);
   downloadXlsx(wb, `Tickets_${empLabel}_${fecha}.xlsx`);
-  toast('Informe de tickets exportado', 'success');
+  showToast('Informe de tickets exportado', 'success');
 };
 
 window.exportActivos = () => {
+  if (!xlsxLoaded && typeof XLSX === 'undefined') return showToast('Biblioteca de exportación no disponible', 'error');
+  
   const emp = document.getElementById('filter-empresa-assets')?.value || selectedEmpresa;
   const q   = document.getElementById('search-assets')?.value?.toLowerCase() || '';
 
@@ -1580,7 +2382,7 @@ window.exportActivos = () => {
     (!q   || a.nombre?.toLowerCase().includes(q) || a.serial?.toLowerCase().includes(q))
   );
 
-  if (!data.length) return toast('No hay activos para exportar', 'error');
+  if (!data.length) return showToast('No hay activos para exportar', 'error');
 
   const estadoLabels = { activo:'Activo', inactivo:'Inactivo', mantenimiento:'En Mantenimiento' };
   const rows = data.map(a => ({
@@ -1603,7 +2405,6 @@ window.exportActivos = () => {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Activos');
 
-  // Hoja resumen por tipo
   const tipoCount = {};
   data.forEach(a => { tipoCount[a.tipo] = (tipoCount[a.tipo] || 0) + 1; });
   const resumen = Object.entries(tipoCount).map(([tipo, cant]) => ({ 'Tipo': tipo, 'Cantidad': cant }));
@@ -1616,10 +2417,12 @@ window.exportActivos = () => {
   const empLabel = emp ? (emp === 'vehidiesel' ? 'Vehidiesel' : 'HB') : 'Todas';
   const fecha = new Date().toISOString().slice(0,10);
   downloadXlsx(wb, `Activos_${empLabel}_${fecha}.xlsx`);
-  toast('Informe de activos exportado', 'success');
+  showToast('Informe de activos exportado', 'success');
 };
 
 window.exportMantenimientos = () => {
+  if (!xlsxLoaded && typeof XLSX === 'undefined') return showToast('Biblioteca de exportación no disponible', 'error');
+  
   const emp = document.getElementById('filter-empresa-maint')?.value || selectedEmpresa;
   const q   = document.getElementById('search-maint')?.value?.toLowerCase() || '';
 
@@ -1628,7 +2431,7 @@ window.exportMantenimientos = () => {
     (!q   || m.activoNombre?.toLowerCase().includes(q) || m.tecnico?.toLowerCase().includes(q))
   );
 
-  if (!data.length) return toast('No hay mantenimientos para exportar', 'error');
+  if (!data.length) return showToast('No hay mantenimientos para exportar', 'error');
 
   const estadoLabels = { pendiente:'Pendiente', en_proceso:'En Proceso', completado:'Completado' };
   const rows = data.map(m => ({
@@ -1654,7 +2457,7 @@ window.exportMantenimientos = () => {
   const empLabel = emp ? (emp === 'vehidiesel' ? 'Vehidiesel' : 'HB') : 'Todas';
   const fecha = new Date().toISOString().slice(0,10);
   downloadXlsx(wb, `Mantenimientos_${empLabel}_${fecha}.xlsx`);
-  toast('Informe de mantenimientos exportado', 'success');
+  showToast('Informe de mantenimientos exportado', 'success');
 };
 
 
@@ -1733,11 +2536,381 @@ function emptyConsulta() {
 }
 
 window.deleteUser = async (id) => {
-  if (id === currentUser?.uid) return toast('No puedes eliminarte a ti mismo', 'error');
+  if (!db) return showToast('Firebase no configurado', 'error');
+  if (id === currentUser?.uid) return showToast('No puedes eliminarte a ti mismo', 'error');
   if (!confirm('¿Eliminar este usuario del registro?')) return;
-  await remove(ref(db, `users/${id}`));
-  toast('Usuario eliminado', 'success');
+  try {
+    await remove(ref(db, `users/${id}`));
+    showToast('Usuario eliminado', 'success');
+  } catch (e) {
+    showToast('Error al eliminar usuario', 'error');
+  }
 };
+
+// ══ MOBILE NAV ══
+window.toggleSidebar = () => {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('open');
+};
+window.closeSidebar = () => {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+};
+
+// Patch showPage to also close sidebar on mobile and sync bottom nav
+const _origShowPage = window.showPage;
+window.showPage = (page) => {
+  _origShowPage(page);
+  closeSidebar();
+  setActiveMobNav(page);
+  if (page === 'config') loadConfigPage();
+};
+
+window.setActiveMobNav = (page) => {
+  document.querySelectorAll('.mob-nav-item').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById(`mobnav-${page}`);
+  if (btn) btn.classList.add('active');
+};
+
+// Sync mob empresa pill
+const _origSetEmpresa = window.setEmpresaFilter;
+window.setEmpresaFilter = (e) => {
+  _origSetEmpresa(e);
+  const pill = document.getElementById('mob-empresa-pill');
+  if (pill) {
+    if (e) {
+      const colors = { vehidiesel:'#60a5fa', hb:'#fbbf24', vehimotors:'#fb7185' };
+      pill.innerHTML = `<span style="color:${colors[e]||'#fff'};font-weight:700;">${e.toUpperCase()}</span>`;
+    } else {
+      pill.innerHTML = '';
+    }
+  }
+};
+
+// ── UPDATE BADGE (sidebar + mobile) ──
+window.updateBadge = () => {
+  const count = allTickets.filter(t => t.estado==='abierto').length;
+  document.getElementById('badge-tickets').textContent = count;
+  const mobBadge = document.getElementById('mob-badge-tickets');
+  if (mobBadge) {
+    mobBadge.textContent = count;
+    mobBadge.style.display = count > 0 ? 'flex' : 'none';
+  }
+}
+
+// ── CONFIG PAGE ──
+window.loadConfigPage = () => {
+  const config = getFirebaseConfig();
+  document.getElementById('cfg-apiKey').value = config.apiKey || '';
+  document.getElementById('cfg-authDomain').value = config.authDomain || '';
+  document.getElementById('cfg-databaseURL').value = config.databaseURL || '';
+  document.getElementById('cfg-projectId').value = config.projectId || '';
+  document.getElementById('cfg-storageBucket').value = config.storageBucket || '';
+  document.getElementById('cfg-messagingSenderId').value = config.messagingSenderId || '';
+  document.getElementById('cfg-appId').value = config.appId || '';
+  
+  const enabled = isBackupEnabled();
+  document.getElementById('cfg-backup-enabled').checked = enabled;
+  document.getElementById('cfg-backup-status').textContent = enabled ? 'Backup local activado' : 'Backup local desactivado';
+  document.getElementById('cfg-backup-slider').style.transform = enabled ? 'translateX(20px)' : '';
+  
+  const info = getBackupInfo();
+  document.getElementById('cfg-backup-info').style.display = info.count > 0 ? 'block' : 'none';
+  document.getElementById('cfg-backup-count').textContent = info.count;
+  document.getElementById('cfg-backup-size').textContent = info.sizeKB + ' KB';
+  
+  document.getElementById('cfg-stat-tickets').textContent = allTickets.length;
+  document.getElementById('cfg-stat-assets').textContent = allAssets.length;
+  document.getElementById('cfg-stat-maints').textContent = allMaints.length;
+  document.getElementById('cfg-stat-users').textContent = allUsers.length;
+  
+  document.getElementById('cfg-version').textContent = '1.0.0';
+  document.getElementById('cfg-last-update').textContent = new Date().toLocaleString('es-CO');
+  document.getElementById('cfg-browser').textContent = navigator.userAgent.split(')')[0].split('(')[1] || 'Desconocido';
+  document.getElementById('cfg-firebase-status').textContent = config.apiKey ? 'Configurado' : 'No configurado';
+};
+
+window.saveFirebaseConfigFromForm = () => {
+  const config = {
+    apiKey: document.getElementById('cfg-apiKey').value.trim(),
+    authDomain: document.getElementById('cfg-authDomain').value.trim(),
+    databaseURL: document.getElementById('cfg-databaseURL').value.trim(),
+    projectId: document.getElementById('cfg-projectId').value.trim(),
+    storageBucket: document.getElementById('cfg-storageBucket').value.trim(),
+    messagingSenderId: document.getElementById('cfg-messagingSenderId').value.trim(),
+    appId: document.getElementById('cfg-appId').value.trim()
+  };
+  
+  if (!config.apiKey || !config.databaseURL) {
+    return showToast('API Key y Database URL son obligatorios', 'error');
+  }
+  
+  saveFirebaseConfig(config);
+  showToast('Configuración guardada. Recarga la página para aplicar.', 'success');
+};
+
+window.toggleBackup = (enabled) => {
+  setBackupEnabled(enabled);
+  document.getElementById('cfg-backup-status').textContent = enabled ? 'Backup local activado' : 'Backup local desactivado';
+  document.getElementById('cfg-backup-slider').style.transform = enabled ? 'translateX(20px)' : '';
+  if (enabled) {
+    saveBackup('tickets', allTickets);
+    saveBackup('assets', allAssets);
+    saveBackup('maints', allMaints);
+    saveBackup('users', allUsers);
+    showToast('Backup activado y datos guardados', 'success');
+  }
+};
+
+window.restoreFromBackup = () => {
+  const tickets = loadBackup('tickets');
+  const assets = loadBackup('assets');
+  const maints = loadBackup('maints');
+  const users = loadBackup('users');
+  
+  if (!tickets && !assets && !maints && !users) {
+    return showToast('No hay backups disponibles', 'error');
+  }
+  
+  if (tickets) { allTickets = tickets; filterTickets(); }
+  if (assets) { allAssets = assets; filterAssets(); }
+  if (maints) { allMaints = maints; filterMaints(); }
+  
+  renderDashboardStats();
+  renderUsers();
+  loadConfigPage();
+  showToast('Datos restaurados desde backup local', 'success');
+};
+
+window.clearBackups = () => {
+  if (!confirm('¿Eliminar todos los backups locales?')) return;
+  clearAllBackups();
+  loadConfigPage();
+  showToast('Backups eliminados', 'success');
+};
+
+// ── ENHANCED FORM VALIDATION ──
+window.submitPublicTicket = async () => {
+  if (!db) return showToast('Firebase no configurado. Contacta al administrador.', 'error');
+  
+  clearAllFieldErrors('pubcontent-registrar');
+  
+  const validation = validateForm('pubcontent-registrar', {
+    't-nombre': ['required'],
+    't-email': ['required', 'email'],
+    't-tipo': ['required'],
+    't-asunto': ['required', ['minLength', 3]],
+    't-descripcion': ['required', ['minLength', 10]]
+  });
+  
+  if (!validation.isValid) {
+    Object.entries(validation.errors).forEach(([field, error]) => {
+      showFieldError(field, error);
+    });
+    return showToast('Completa los campos obligatorios correctamente', 'error');
+  }
+  
+  if (!publicEmpresa) return showToast('Selecciona una empresa primero', 'error');
+  
+  const nombre = document.getElementById('t-nombre').value.trim();
+  const email  = document.getElementById('t-email').value.trim();
+  const tipo   = document.getElementById('t-tipo').value;
+  const asunto = document.getElementById('t-asunto').value.trim();
+  const desc   = document.getElementById('t-descripcion').value.trim();
+
+  const numero = genTicketNum();
+  try {
+    await push(ref(db, 'tickets'), {
+      numero, empresa: publicEmpresa,
+      empresaLabel: EMPRESAS[publicEmpresa]?.label || publicEmpresa,
+      nombre, email,
+      telefono: document.getElementById('t-telefono').value.trim(),
+      area:     document.getElementById('t-area').value.trim(),
+      tipo, asunto, descripcion: desc,
+      prioridad: document.getElementById('t-prioridad').value,
+      estado: 'abierto',
+      createdAt: Date.now()
+    });
+    document.getElementById('ticket-num').textContent = numero;
+    document.getElementById('ticket-form-section').style.display = 'none';
+    document.getElementById('ticket-success').style.display = 'block';
+  } catch(e) {
+    showToast('Error al enviar. Verifica la config de Firebase.', 'error');
+    console.error(e);
+  }
+};
+
+window.saveAsset = async () => {
+  if (!db) return showToast('Firebase no configurado', 'error');
+  
+  clearAllFieldErrors('asset-form-card');
+  
+  const validation = validateForm('asset-form-card', {
+    'a-empresa': ['required'],
+    'a-nombre': ['required'],
+    'a-tipo': ['required']
+  });
+  
+  if (!validation.isValid) {
+    Object.entries(validation.errors).forEach(([field, error]) => {
+      showFieldError(field, error);
+    });
+    return showToast('Completa los campos obligatorios', 'error');
+  }
+  
+  const empresa = document.getElementById('a-empresa').value;
+  const nombre  = document.getElementById('a-nombre').value.trim();
+  const tipo    = document.getElementById('a-tipo').value;
+  
+  const data = {
+    empresa, empresaLabel: EMPRESAS[empresa]?.label||empresa,
+    nombre, tipo,
+    serial: document.getElementById('a-serial').value.trim(),
+    ubicacion: document.getElementById('a-ubicacion').value.trim(),
+    responsable: document.getElementById('a-responsable').value.trim(),
+    estado: document.getElementById('a-estado').value,
+    descripcion: document.getElementById('a-descripcion').value.trim(),
+    updatedAt: Date.now()
+  };
+  const editId = document.getElementById('a-edit-id').value;
+  if (editId) {
+    await update(ref(db, `assets/${editId}`), data);
+    showToast('Activo actualizado', 'success');
+  } else {
+    data.createdAt = Date.now();
+    await push(ref(db, 'assets'), data);
+    showToast('Activo creado', 'success');
+  }
+  hideAssetForm();
+};
+
+window.saveMaint = async () => {
+  if (!db) return showToast('Firebase no configurado', 'error');
+  
+  clearAllFieldErrors('maint-form-card');
+  
+  const validation = validateForm('maint-form-card', {
+    'm-empresa': ['required'],
+    'm-activo': ['required'],
+    'm-tipo': ['required'],
+    'm-fecha': ['required'],
+    'm-descripcion': ['required', ['minLength', 10]]
+  });
+  
+  if (!validation.isValid) {
+    Object.entries(validation.errors).forEach(([field, error]) => {
+      showFieldError(field, error);
+    });
+    return showToast('Completa los campos obligatorios', 'error');
+  }
+  
+  const empresa  = document.getElementById('m-empresa').value;
+  const activoId = document.getElementById('m-activo').value;
+  const tipo     = document.getElementById('m-tipo').value;
+  const fecha    = document.getElementById('m-fecha').value;
+  const desc     = document.getElementById('m-descripcion').value.trim();
+  
+  const activo = allAssets.find(a => a.id === activoId);
+  const data = {
+    empresa, empresaLabel: EMPRESAS[empresa]?.label||empresa,
+    activoId, activoNombre: activo?.nombre||activoId,
+    tipo, fecha, descripcion: desc,
+    tecnico: document.getElementById('m-tecnico').value.trim(),
+    estado:  document.getElementById('m-estado').value,
+    costo:   parseFloat(document.getElementById('m-costo').value)||0,
+    updatedAt: Date.now()
+  };
+  const editId = document.getElementById('m-edit-id').value;
+  if (editId) {
+    await update(ref(db, `maintenances/${editId}`), data);
+    showToast('Mantenimiento actualizado', 'success');
+  } else {
+    data.createdAt = Date.now();
+    await push(ref(db, 'maintenances'), data);
+    showToast('Mantenimiento creado', 'success');
+  }
+  hideMaintForm();
+};
+
+window.saveUser = async () => {
+  if (!auth) return showToast('Firebase no configurado', 'error');
+  
+  clearAllFieldErrors('user-form-card');
+  
+  const validation = validateForm('user-form-card', {
+    'u-nombre': ['required', ['minLength', 2]],
+    'u-email': ['required', 'email'],
+    'u-pass': ['required', ['minLength', 6]]
+  });
+  
+  if (!validation.isValid) {
+    Object.entries(validation.errors).forEach(([field, error]) => {
+      showFieldError(field, error);
+    });
+    return showToast('Completa los campos correctamente', 'error');
+  }
+  
+  const nombre = document.getElementById('u-nombre').value.trim();
+  const email  = document.getElementById('u-email').value.trim();
+  const pass   = document.getElementById('u-pass').value;
+  const rol    = document.getElementById('u-rol').value;
+  
+  if (pass.length < 6) return showToast('La contraseña debe tener al menos 6 caracteres', 'error');
+  
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await set(ref(db, `users/${cred.user.uid}`), { nombre, email, rol, createdAt: Date.now() });
+    showToast('Usuario creado: ' + email, 'success');
+    hideUserForm();
+    ['u-nombre','u-email','u-pass'].forEach(id => document.getElementById(id).value = '');
+  } catch(e) {
+    const messages = {
+      'auth/email-already-in-use': 'Este correo ya está registrado',
+      'auth/invalid-email': 'Correo electrónico inválido',
+      'auth/weak-password': 'Contraseña demasiado débil'
+    };
+    showToast('Error: ' + (messages[e.code] || e.message), 'error');
+  }
+};
+
+// XLSX fallback load check
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    if (!xlsxLoaded && typeof XLSX === 'undefined') {
+      console.warn('XLSX no pudo cargarse. Funciones de exportación no disponibles.');
+    }
+  }, 3000);
+});
+
+// Add input event listeners for real-time validation
+document.addEventListener('DOMContentLoaded', () => {
+  ['t-nombre','t-email','t-asunto','t-descripcion','u-nombre','u-email','u-pass'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('blur', function() {
+        const rules = {
+          't-nombre': ['required'],
+          't-email': ['required', 'email'],
+          't-asunto': ['required', ['minLength', 3]],
+          't-descripcion': ['required', ['minLength', 10]],
+          'u-nombre': ['required', ['minLength', 2]],
+          'u-email': ['required', 'email'],
+          'u-pass': ['required', ['minLength', 6]]
+        };
+        if (rules[id]) {
+          const error = validateField(this.value, rules[id]);
+          if (error) {
+            showFieldError(id, error);
+          } else {
+            removeFieldError(id);
+          }
+        }
+      });
+    }
+  });
+});
 </script>
 </body>
 </html>
