@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SupportDesk — Vehidiesel & HB</title>
+<title>SupportNil — Vehidiesel & HB</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎫</text></svg>">
 <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -609,7 +609,7 @@
 
 <div id="loader">
   <div class="loader-ring"></div>
-  <div class="loader-text">SupportDesk</div>
+  <div class="loader-text">SupportNil</div>
   <div class="loader-info">Inicializando aplicación...</div>
   <div class="loader-progress"><div class="loader-progress-bar" id="loader-progress" style="width:20%"></div></div>
 </div>
@@ -765,7 +765,7 @@
 
   <!-- Mobile topbar -->
   <div class="mobile-topbar">
-    <div class="mobile-topbar-logo">SupportDesk</div>
+    <div class="mobile-topbar-logo">SupportNil</div>
     <div class="mobile-topbar-right">
       <div id="mob-empresa-pill" style="font-size:.72rem;"></div>
       <button class="btn-hamburger" onclick="toggleSidebar()" aria-label="Menú">☰</button>
@@ -898,7 +898,7 @@
         <div class="page-header">
           <div><h1>🎫 Tickets</h1><p>Gestión de solicitudes y soporte</p></div>
           <div class="actions-row">
-            <button class="btn btn-ghost" onclick="exportTickets()">📥 Exportar Excel</button>
+            <button class="btn btn-ghost" onclick="exportTickets()" aria-label="Exportar tickets a Excel">📥 Exportar Excel</button>
             <select id="filter-empresa-tickets" onchange="filterTickets()" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:inherit;font-size:.82rem;">
               <option value="">Todas</option>
               <option value="vehidiesel">Vehidiesel</option>
@@ -951,27 +951,37 @@
                 <option value="vehimotors">🚗 Vehimotors S.A.S</option>
               </select>
             </div>
-            <div class="form-group"><label>Nombre *</label><input type="text" id="a-nombre" placeholder="Ej: Laptop HP EliteBook"></div>
+            <div class="form-group"><label>AREA *</label><input type="text" id="a-area" placeholder="Ej: Contabilidad"></div>
           </div>
           <div class="form-row">
-            <div class="form-group"><label>Tipo *</label>
-              <select id="a-tipo">
+            <div class="form-group"><label>EQUIPO *</label><input type="text" id="a-nombre" placeholder="Ej: Laptop HP EliteBook"></div>
+            <div class="form-group"><label>MODELO</label><input type="text" id="a-modelo" placeholder="Ej: HP EliteBook 840 G8"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>SN *</label><input type="text" id="a-serial" placeholder="Número de serie"></div>
+            <div class="form-group"><label>ACTIVO *</label><input type="text" id="a-activo" placeholder="Código activo fijo"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Sistema Operativo</label>
+              <select id="a-sistema">
                 <option value="">Selecciona...</option>
-                <option value="computador">Computador</option>
-                <option value="portatil">Portatil</option>
-                <option value="servidor">Servidor</option>
-                <option value="impresora">Impresora</option>
-                <option value="red">Equipo de Red</option>
-                <option value="movil">Móvil / Tablet</option>
-                <option value="vehiculo">Vehículo</option>
+                <option value="Windows 10">Windows 10</option>
+                <option value="Windows 11">Windows 11</option>
+                <option value="Windows Server 2019">Windows Server 2019</option>
+                <option value="Windows Server 2022">Windows Server 2022</option>
+                <option value="Ubuntu">Ubuntu</option>
+                <option value="Debian">Debian</option>
+                <option value="CentOS">CentOS</option>
+                <option value="MacOS">MacOS</option>
+                <option value="Sin SO">Sin SO</option>
                 <option value="otro">Otro</option>
               </select>
             </div>
-            <div class="form-group"><label>Serial / Código</label><input type="text" id="a-serial" placeholder="SN-0001"></div>
+            <div class="form-group"><label>Version</label><input type="text" id="a-version" placeholder="Ej: 22H2, 20.04, etc"></div>
           </div>
           <div class="form-row">
-            <div class="form-group"><label>Ubicación</label><input type="text" id="a-ubicacion" placeholder="Ej: Oficina 3-B"></div>
-            <div class="form-group"><label>Responsable</label><input type="text" id="a-responsable" placeholder="Nombre del encargado"></div>
+            <div class="form-group"><label>Dirección IP</label><input type="text" id="a-ip" placeholder="Ej: 192.168.1.100"></div>
+            <div class="form-group"><label>Dirección MAC</label><input type="text" id="a-mac" placeholder="Ej: AA:BB:CC:DD:EE:FF"></div>
           </div>
           <div class="form-row">
             <div class="form-group"><label>Estado</label>
@@ -981,6 +991,9 @@
                 <option value="mantenimiento">En Mantenimiento</option>
               </select>
             </div>
+            <div class="form-group"><label>Responsable</label><input type="text" id="a-responsable" placeholder="Nombre del encargado"></div>
+          </div>
+          <div class="form-row">
             <div class="form-group"><label>Descripción</label><input type="text" id="a-descripcion" placeholder="Notas adicionales..."></div>
           </div>
           <input type="hidden" id="a-edit-id">
@@ -1005,7 +1018,7 @@
           </div>
           <div style="overflow-x:auto;width:100%;">
             <table style="width:100%;border-collapse:collapse;">
-              <thead><tr><th style="padding:12px 16px;text-align:left;font-size:.75rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Empresa</th><th style="padding:12px 16px;text-align:left;font-size:.75rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Nombre</th><th style="padding:12px 16px;text-align:left;font-size:.75rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Tipo</th><th style="padding:12px 16px;text-align:left;font-size:.75rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Serial</th><th style="padding:12px 16px;text-align:left;font-size:.75rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Ubicación</th><th style="padding:12px 16px;text-align:left;font-size:.75rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Responsable</th><th style="padding:12px 16px;text-align:left;font-size:.75rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Estado</th><th style="padding:12px 16px;text-align:left;font-size:.75rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Acciones</th></tr></thead>
+              <thead><tr><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Empresa</th><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">AREA</th><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">EQUIPO</th><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">MODELO</th><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">SN</th><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">ACTIVO</th><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Sistema Operativo</th><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Version</th><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">IP</th><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">MAC</th><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Ubicacion</th><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Responsable</th><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Estado</th><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Acciones</th></tr></thead>
               <tbody id="assets-tbody"></tbody>
             </table>
           </div>
@@ -1027,15 +1040,15 @@
           <h3 id="maint-form-title">Nuevo Mantenimiento</h3>
           <div class="form-row">
             <div class="form-group"><label>Empresa *</label>
-              <select id="m-empresa" onchange="filterAssetsByEmpresa()">
+              <select id="m-empresa" onchange="filterResponsablesByEmpresa()">
                 <option value="">Selecciona empresa...</option>
                 <option value="vehidiesel">🚛 Vehidiesel S.A.S</option>
                 <option value="hb">🏢 HB Y CIA S.A.S</option>
                 <option value="vehimotors">🚗 Vehimotors S.A.S</option>
               </select>
             </div>
-            <div class="form-group"><label>Activo *</label>
-              <select id="m-activo"><option value="">Selecciona empresa primero...</option></select>
+            <div class="form-group"><label>Responsable *</label>
+              <select id="m-usuario"><option value="">Selecciona empresa primero...</option></select>
             </div>
           </div>
           <div class="form-row">
@@ -1051,7 +1064,6 @@
           </div>
           <div class="form-row">
             <div class="form-group"><label>Técnico Asignado</label><input type="text" id="m-tecnico" placeholder="Nombre del técnico"></div>
-            <div class="form-group"><label>Costo estimado</label><input type="number" id="m-costo" placeholder="0.00"></div>
           </div>
           <div class="form-group"><label>Descripción del trabajo *</label>
             <textarea id="m-descripcion" placeholder="Describe el mantenimiento a realizar..." style="min-height:80px;"></textarea>
@@ -1085,7 +1097,7 @@
           </div>
           <div class="data-table-wrapper">
             <table class="data-table">
-              <thead><tr><th>Empresa</th><th>Activo</th><th>Tipo</th><th>Técnico</th><th>Fecha</th><th>Estado</th><th>Costo</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>Empresa</th><th>Usuario</th><th>Tipo</th><th>Técnico</th><th>Fecha</th><th>Estado</th><th>Acciones</th></tr></thead>
               <tbody id="maints-tbody"></tbody>
             </table>
           </div>
@@ -1097,10 +1109,13 @@
       <div class="page" id="page-usuarios">
         <div class="page-header">
           <div><h1>👥 Usuarios</h1><p>Gestión de accesos al panel admin</p></div>
-          <button class="btn btn-primary" onclick="showUserForm()">+ Nuevo Usuario</button>
+          <div class="actions-row">
+            <button class="btn btn-ghost" onclick="exportUsuarios()" aria-label="Exportar usuarios a Excel">📥 Exportar Excel</button>
+            <button class="btn btn-primary" onclick="showUserForm()">+ Nuevo Usuario</button>
+          </div>
         </div>
         <div class="form-card" id="user-form-card" style="display:none;margin-bottom:24px;">
-          <h3>Nuevo Usuario Admin</h3>
+          <h3 id="user-form-title">Nuevo Usuario Admin</h3>
           <div class="form-row">
             <div class="form-group"><label>Nombre completo *</label><input type="text" id="u-nombre" placeholder="Nombre Apellido"></div>
             <div class="form-group"><label>Correo *</label><input type="email" id="u-email" placeholder="usuario@empresa.com"></div>
@@ -1114,8 +1129,9 @@
               </select>
             </div>
           </div>
+          <input type="hidden" id="u-edit-id">
           <div class="actions-row">
-            <button class="btn btn-primary" onclick="saveUser()">💾 Crear Usuario</button>
+            <button class="btn btn-primary" id="user-save-btn" onclick="saveUser()">💾 Crear Usuario</button>
             <button class="btn btn-ghost" onclick="hideUserForm()">Cancelar</button>
           </div>
         </div>
@@ -1521,16 +1537,17 @@ class Paginator {
       }
     }
     
+    const pagName = this.containerId + 'Paginator';
     container.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--border);flex-wrap:wrap;gap:10px;">
         <span style="font-size:.8rem;color:var(--muted);">Mostrando ${this.startIndex + 1}-${this.endIndex} de ${this.totalRows}</span>
         <div style="display:flex;align-items:center;gap:4px;">
-          <button class="btn btn-ghost btn-sm" onclick="${this.containerId}_paginator.prevPage()" ${current === 1 ? 'disabled' : ''}>‹</button>
+          <button class="btn btn-ghost btn-sm" onclick="${pagName}.prevPage()" ${current === 1 ? 'disabled' : ''}>‹</button>
           ${pages.map(p => p === '...' 
             ? '<span style="padding:0 6px;color:var(--muted);">...</span>'
-            : `<button class="btn btn-sm ${p === current ? 'btn-primary' : 'btn-ghost'}" onclick="${this.containerId}_paginator.goToPage(${p})">${p}</button>`
+            : `<button class="btn btn-sm ${p === current ? 'btn-primary' : 'btn-ghost'}" onclick="${pagName}.goToPage(${p})">${p}</button>`
           ).join('')}
-          <button class="btn btn-ghost btn-sm" onclick="${this.containerId}_paginator.nextPage()" ${current === totalPages ? 'disabled' : ''}>›</button>
+          <button class="btn btn-ghost btn-sm" onclick="${pagName}.nextPage()" ${current === totalPages ? 'disabled' : ''}>›</button>
         </div>
       </div>
     `;
@@ -1573,6 +1590,10 @@ const ticketsPaginator = new Paginator('tickets', 15);
 const assetsPaginator = new Paginator('assets', 15);
 const maintsPaginator = new Paginator('maints', 15);
 
+window.ticketsPaginator = ticketsPaginator;
+window.assetsPaginator = assetsPaginator;
+window.maintsPaginator = maintsPaginator;
+
 const EMPRESAS = {
   vehidiesel: { label: 'Vehidiesel S.A.S', icon: '🚛' },
   hb:         { label: 'HB Y CIA S.A.S',   icon: '🏢' },
@@ -1585,6 +1606,13 @@ const toast = showToast;
 function fmtDate(ts) {
   if (!ts) return '—';
   return new Date(ts).toLocaleDateString('es-CO', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
 }
 
 function genTicketNum() {
@@ -1886,7 +1914,25 @@ function renderDashboardStats() {
 }
 
 // ── PUBLIC TICKET ──
+const RATE_LIMIT_KEY = 'sd_last_ticket_time';
+const RATE_LIMIT_MS = 60000;
+
+function checkRateLimit() {
+  const last = localStorage.getItem(RATE_LIMIT_KEY);
+  if (last && Date.now() - parseInt(last) < RATE_LIMIT_MS) {
+    return false;
+  }
+  return true;
+}
+
+function setRateLimit() {
+  localStorage.setItem(RATE_LIMIT_KEY, Date.now().toString());
+}
+
 window.submitPublicTicket = async () => {
+  if (!checkRateLimit()) {
+    return toast('Espera 1 minuto antes de enviar otro ticket', 'warning');
+  }
   if (!publicEmpresa) return toast('Selecciona una empresa primero', 'error');
   const nombre = document.getElementById('t-nombre').value.trim();
   const email  = document.getElementById('t-email').value.trim();
@@ -1909,6 +1955,7 @@ window.submitPublicTicket = async () => {
       estado: 'abierto',
       createdAt: Date.now()
     });
+    setRateLimit();
     document.getElementById('ticket-num').textContent = numero;
     document.getElementById('ticket-form-section').style.display = 'none';
     document.getElementById('ticket-success').style.display = 'block';
@@ -1934,7 +1981,7 @@ window.filterTickets = () => {
   filteredTickets = allTickets.filter(t =>
     (!st  || t.estado === st) &&
     (!emp || t.empresa === emp) &&
-    (!q   || t.asunto?.toLowerCase().includes(q) || t.nombre?.toLowerCase().includes(q) || (t.numero||'').includes(q))
+    (!q   || t.asunto?.toLowerCase().includes(q) || t.nombre?.toLowerCase().includes(q) || (t.numero||'').toLowerCase().includes(q) || t.email?.toLowerCase().includes(q))
   );
   ticketsPaginator.setData(filteredTickets, renderTickets);
 };
@@ -2018,7 +2065,7 @@ window.updateTicketStatus = async (id) => {
     data.fechaCierre = Date.now();
   }
   try {
-    await update(ref(db, `tickets/${id}`), data);
+    await update(ref(db, `tickets/${id}`), {...data});
     closeDetail();
     showToast(estado === 'cerrado' ? 'Ticket cerrado con solución' : 'Estado actualizado', 'success');
   } catch (e) {
@@ -2049,34 +2096,47 @@ window.showAssetForm = () => {
   document.getElementById('asset-form-card').style.display = 'block';
   document.getElementById('asset-form-title').textContent = 'Nuevo Activo';
   document.getElementById('a-edit-id').value = '';
-  ['a-nombre','a-serial','a-ubicacion','a-responsable','a-descripcion'].forEach(id => document.getElementById(id).value = '');
+  ['a-area','a-nombre','a-modelo','a-serial','a-activo','a-version','a-ip','a-mac','a-responsable','a-descripcion'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
   document.getElementById('a-empresa').value = selectedEmpresa || '';
-  document.getElementById('a-tipo').value = '';
+  document.getElementById('a-sistema').value = '';
+  document.getElementById('a-estado').value = 'activo';
 };
 window.hideAssetForm = () => document.getElementById('asset-form-card').style.display = 'none';
 
 window.saveAsset = async () => {
   const empresa = document.getElementById('a-empresa').value;
-  const nombre  = document.getElementById('a-nombre').value.trim();
-  const tipo    = document.getElementById('a-tipo').value;
-  if (!empresa || !nombre || !tipo) return toast('Empresa, nombre y tipo son obligatorios', 'error');
+  if (!empresa) return toast('Selecciona una empresa', 'error');
+  const area = document.getElementById('a-area').value.trim();
+  const nombre = document.getElementById('a-nombre').value.trim();
+  const serial = document.getElementById('a-serial').value.trim();
+  const activo = document.getElementById('a-activo').value.trim();
+  if (!area || !nombre || !serial || !activo) return toast('Área, Equipo, SN y Activo son obligatorios', 'error');
   const data = {
     empresa, empresaLabel: EMPRESAS[empresa]?.label||empresa,
-    nombre, tipo,
-    serial: document.getElementById('a-serial').value.trim(),
-    ubicacion: document.getElementById('a-ubicacion').value.trim(),
-    responsable: document.getElementById('a-responsable').value.trim(),
+    area: area,
+    nombre: nombre,
+    modelo: document.getElementById('a-modelo').value.trim(),
+    serial: serial,
+    activo: activo,
+    sistema: document.getElementById('a-sistema').value,
+    version: document.getElementById('a-version').value.trim(),
+    ip: document.getElementById('a-ip').value.trim(),
+    mac: document.getElementById('a-mac').value.trim(),
     estado: document.getElementById('a-estado').value,
+    responsable: document.getElementById('a-responsable').value.trim(),
     descripcion: document.getElementById('a-descripcion').value.trim(),
     updatedAt: Date.now()
   };
   const editId = document.getElementById('a-edit-id').value;
   if (editId) {
-    await update(ref(db, `assets/${editId}`), data);
+    await update(ref(db, `assets/${editId}`), {...data});
     toast('Activo actualizado', 'success');
   } else {
     data.createdAt = Date.now();
-    await push(ref(db, 'assets'), data);
+    await push(ref(db, 'assets'), {...data});
     toast('Activo creado', 'success');
   }
   hideAssetForm();
@@ -2095,22 +2155,28 @@ window.filterAssets = () => {
 function renderAssets(list) {
   const tbody = document.getElementById('assets-tbody');
   if (!list || !list.length) {
-    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🖥</div><p>Sin activos registrados</p></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="14"><div class="empty-state"><div class="empty-icon">🖥</div><p>Sin activos registrados</p></div></td></tr>`;
     return;
   }
   tbody.innerHTML = list.map(a => `
     <tr style="border-bottom:1px solid rgba(255,255,255,.04);">
-      <td style="padding:14px 16px;vertical-align:middle;">${empPill(a.empresa)}</td>
-      <td style="padding:14px 16px;vertical-align:middle;"><strong>${a.nombre}</strong></td>
-      <td style="padding:14px 16px;vertical-align:middle;font-size:.82rem">${a.tipo||'—'}</td>
-      <td style="padding:14px 16px;vertical-align:middle;font-size:.78rem;color:#8080a0">${a.serial||'—'}</td>
-      <td style="padding:14px 16px;vertical-align:middle;font-size:.82rem">${a.ubicacion||'—'}</td>
-      <td style="padding:14px 16px;vertical-align:middle;">${a.responsable||'—'}</td>
-      <td style="padding:14px 16px;vertical-align:middle;">${statusBadge(a.estado||'activo')}</td>
-      <td style="padding:14px 16px;vertical-align:middle;">
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-ghost btn-sm" onclick="editAsset('${a.id}')">✏️</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteAsset('${a.id}')">🗑</button>
+      <td style="padding:8px;vertical-align:middle;font-size:.75rem;">${a.empresaLabel||a.empresa||'—'}</td>
+      <td style="padding:8px;vertical-align:middle;font-size:.75rem;">${a.area||'—'}</td>
+      <td style="padding:8px;vertical-align:middle;font-size:.75rem;"><strong>${a.nombre||'—'}</strong></td>
+      <td style="padding:8px;vertical-align:middle;font-size:.75rem;">${a.modelo||'—'}</td>
+      <td style="padding:8px;vertical-align:middle;font-size:.75rem;">${a.serial||'—'}</td>
+      <td style="padding:8px;vertical-align:middle;font-size:.75rem;font-weight:600;">${a.activo||'—'}</td>
+      <td style="padding:8px;vertical-align:middle;font-size:.75rem;">${a.sistema||'—'}</td>
+      <td style="padding:8px;vertical-align:middle;font-size:.75rem;">${a.version||'—'}</td>
+      <td style="padding:8px;vertical-align:middle;font-size:.75rem;">${a.ip||'—'}</td>
+      <td style="padding:8px;vertical-align:middle;font-size:.7rem;">${a.mac||'—'}</td>
+      <td style="padding:8px;vertical-align:middle;font-size:.75rem;">${a.ubicacion||'—'}</td>
+      <td style="padding:8px;vertical-align:middle;font-size:.75rem;">${a.responsable||'—'}</td>
+      <td style="padding:8px;vertical-align:middle;">${statusBadge(a.estado||'activo')}</td>
+      <td style="padding:8px;vertical-align:middle;">
+        <div style="display:flex;gap:4px;">
+          <button class="btn btn-ghost btn-sm" onclick="editAsset('${a.id}')" aria-label="Editar activo">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteAsset('${a.id}')" aria-label="Eliminar activo">🗑</button>
         </div>
       </td>
     </tr>`).join('');
@@ -2123,10 +2189,15 @@ window.editAsset = (id) => {
   document.getElementById('asset-form-title').textContent = 'Editar Activo';
   document.getElementById('a-edit-id').value    = id;
   document.getElementById('a-empresa').value    = a.empresa||'';
+  document.getElementById('a-area').value      = a.area||'';
   document.getElementById('a-nombre').value     = a.nombre||'';
-  document.getElementById('a-tipo').value       = a.tipo||'';
+  document.getElementById('a-modelo').value    = a.modelo||'';
   document.getElementById('a-serial').value     = a.serial||'';
-  document.getElementById('a-ubicacion').value  = a.ubicacion||'';
+  document.getElementById('a-activo').value    = a.activo||'';
+  document.getElementById('a-sistema').value    = a.sistema||'';
+  document.getElementById('a-version').value    = a.version||'';
+  document.getElementById('a-ip').value        = a.ip||'';
+  document.getElementById('a-mac').value        = a.mac||'';
   document.getElementById('a-responsable').value= a.responsable||'';
   document.getElementById('a-estado').value     = a.estado||'activo';
   document.getElementById('a-descripcion').value= a.descripcion||'';
@@ -2149,46 +2220,45 @@ window.showMaintForm = () => {
   document.getElementById('maint-form-card').style.display = 'block';
   document.getElementById('maint-form-title').textContent = 'Nuevo Mantenimiento';
   document.getElementById('m-edit-id').value = '';
-  ['m-tecnico','m-descripcion','m-costo'].forEach(id => document.getElementById(id).value = '');
+  ['m-tecnico','m-descripcion'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('m-fecha').value  = new Date().toISOString().slice(0,10);
   document.getElementById('m-estado').value = 'pendiente';
   document.getElementById('m-empresa').value = selectedEmpresa || '';
-  filterAssetsByEmpresa();
+  filterResponsablesByEmpresa();
 };
 window.hideMaintForm = () => document.getElementById('maint-form-card').style.display = 'none';
 
-window.filterAssetsByEmpresa = () => {
+window.filterResponsablesByEmpresa = () => {
   const emp = document.getElementById('m-empresa').value;
-  const filtered = emp ? allAssets.filter(a => a.empresa === emp) : allAssets;
-  document.getElementById('m-activo').innerHTML =
-    `<option value="">Selecciona activo...</option>` +
-    filtered.map(a => `<option value="${a.id}">${a.nombre} (${a.tipo})</option>`).join('');
+  const filtered = emp ? allAssets.filter(a => a.empresa === emp && a.responsable) : allAssets.filter(a => a.responsable);
+  const uniqueResp = [...new Set(filtered.map(a => a.responsable))];
+  document.getElementById('m-usuario').innerHTML =
+    `<option value="">Selecciona responsable...</option>` +
+    uniqueResp.map(r => `<option value="${r}">${r}</option>`).join('');
 };
 
 window.saveMaint = async () => {
-  const empresa  = document.getElementById('m-empresa').value;
-  const activoId = document.getElementById('m-activo').value;
-  const tipo     = document.getElementById('m-tipo').value;
+  const empresa    = document.getElementById('m-empresa').value;
+  const responsable = document.getElementById('m-usuario').value;
+  const tipo       = document.getElementById('m-tipo').value;
   const fecha    = document.getElementById('m-fecha').value;
   const desc     = document.getElementById('m-descripcion').value.trim();
-  if (!empresa || !activoId || !tipo || !fecha || !desc) return toast('Completa los campos obligatorios', 'error');
-  const activo = allAssets.find(a => a.id === activoId);
+  if (!empresa || !responsable || !tipo || !fecha || !desc) return toast('Completa los campos obligatorios', 'error');
   const data = {
     empresa, empresaLabel: EMPRESAS[empresa]?.label||empresa,
-    activoId, activoNombre: activo?.nombre||activoId,
+    responsable: responsable,
     tipo, fecha, descripcion: desc,
     tecnico: document.getElementById('m-tecnico').value.trim(),
     estado:  document.getElementById('m-estado').value,
-    costo:   parseFloat(document.getElementById('m-costo').value)||0,
     updatedAt: Date.now()
   };
   const editId = document.getElementById('m-edit-id').value;
   if (editId) {
-    await update(ref(db, `maintenances/${editId}`), data);
+    await update(ref(db, `maintenances/${editId}`), {...data});
     toast('Mantenimiento actualizado', 'success');
   } else {
     data.createdAt = Date.now();
-    await push(ref(db, 'maintenances'), data);
+    await push(ref(db, 'maintenances'), {...data});
     toast('Mantenimiento creado', 'success');
   }
   hideMaintForm();
@@ -2199,7 +2269,7 @@ window.filterMaints = () => {
   const emp = document.getElementById('filter-empresa-maint')?.value || selectedEmpresa;
   filteredMaints = allMaints.filter(m =>
     (!emp || m.empresa === emp) &&
-    (!q   || m.activoNombre?.toLowerCase().includes(q) || m.tipo?.toLowerCase().includes(q) || m.tecnico?.toLowerCase().includes(q))
+    (!q   || m.responsable?.toLowerCase().includes(q) || m.tipo?.toLowerCase().includes(q) || m.tecnico?.toLowerCase().includes(q))
   );
   maintsPaginator.setData(filteredMaints, renderMaints);
 };
@@ -2209,18 +2279,18 @@ function renderMaints(list) {
   tbody.innerHTML = list && list.length
     ? list.map(m => `<tr>
         <td>${empPill(m.empresa)}</td>
-        <td><strong>${m.activoNombre||'—'}</strong></td>
+        <td><strong>${m.responsable||'—'}</strong></td>
         <td style="font-size:.82rem">${m.tipo||'—'}</td>
         <td>${m.tecnico||'—'}</td>
         <td style="font-size:.82rem">${m.fecha||'—'}</td>
         <td>${statusBadge(m.estado||'pendiente')}</td>
-        <td style="font-size:.82rem">${m.costo ? '$'+Number(m.costo).toLocaleString('es-CO') : '—'}</td>
+        
         <td><div class="actions-row">
           <button class="btn btn-ghost btn-sm" onclick="editMaint('${m.id}')">✏️</button>
           <button class="btn btn-danger btn-sm" onclick="deleteMaint('${m.id}')">🗑</button>
         </div></td>
       </tr>`).join('')
-    : `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🔧</div><p>Sin mantenimientos</p></div></td></tr>`;
+    : `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🔧</div><p>Sin mantenimientos</p></div></td></tr>`;
 }
 
 window.editMaint = (id) => {
@@ -2230,14 +2300,13 @@ window.editMaint = (id) => {
   document.getElementById('maint-form-title').textContent = 'Editar Mantenimiento';
   document.getElementById('m-edit-id').value     = id;
   document.getElementById('m-empresa').value     = m.empresa||'';
-  filterAssetsByEmpresa();
-  setTimeout(() => { document.getElementById('m-activo').value = m.activoId||''; }, 100);
+  filterResponsablesByEmpresa();
+  setTimeout(() => { document.getElementById('m-usuario').value = m.responsable||''; }, 100);
   document.getElementById('m-tipo').value        = m.tipo||'';
   document.getElementById('m-fecha').value       = m.fecha||'';
   document.getElementById('m-tecnico').value     = m.tecnico||'';
   document.getElementById('m-descripcion').value = m.descripcion||'';
   document.getElementById('m-estado').value      = m.estado||'pendiente';
-  document.getElementById('m-costo').value       = m.costo||'';
   document.getElementById('maint-form-card').scrollIntoView({ behavior:'smooth' });
 };
 
@@ -2253,7 +2322,20 @@ window.deleteMaint = async (id) => {
 };
 
 // ── USERS ──
-window.showUserForm  = () => document.getElementById('user-form-card').style.display = 'block';
+window.showUserForm  = () => {
+  document.getElementById('user-form-card').style.display = 'block';
+  document.getElementById('user-form-title').textContent = 'Nuevo Usuario Admin';
+  document.getElementById('u-edit-id').value = '';
+  document.getElementById('u-nombre').value = '';
+  document.getElementById('u-email').value = '';
+  document.getElementById('u-email').disabled = false;
+  document.getElementById('u-pass').value = '';
+  document.getElementById('u-pass').placeholder = 'Mínimo 6 caracteres';
+  document.getElementById('u-rol').value = 'agent';
+  document.getElementById('user-save-btn').textContent = '💾 Crear Usuario';
+  document.getElementById('user-save-btn').onclick = saveUser;
+};
+
 window.hideUserForm  = () => document.getElementById('user-form-card').style.display = 'none';
 
 window.saveUser = async () => {
@@ -2265,7 +2347,7 @@ window.saveUser = async () => {
   if (pass.length < 6) return toast('La contraseña debe tener al menos 6 caracteres', 'error');
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
-    await set(ref(db, `users/${cred.user.uid}`), { nombre, email, rol, createdAt: Date.now() });
+    await set(ref(db, `users/${cred.user.uid}`), {...{ nombre, email, rol, createdAt: Date.now() }});
     toast('Usuario creado: ' + email, 'success');
     hideUserForm();
     ['u-nombre','u-email','u-pass'].forEach(id => document.getElementById(id).value = '');
@@ -2278,14 +2360,62 @@ function renderUsers() {
   const tbody = document.getElementById('users-tbody');
   tbody.innerHTML = allUsers.length
     ? allUsers.map(u => `<tr>
-        <td><strong>${u.nombre||'—'}</strong></td>
-        <td style="font-size:.82rem">${u.email||'—'}</td>
+        <td><strong>${escapeHtml(u.nombre)||'—'}</strong></td>
+        <td style="font-size:.82rem">${escapeHtml(u.email)||'—'}</td>
         <td>${statusBadge(u.rol||'agent')}</td>
         <td style="font-size:.8rem;color:var(--muted)">${fmtDate(u.createdAt)}</td>
-        <td><button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">🗑 Eliminar</button></td>
+        <td><div class="actions-row">
+          <button class="btn btn-ghost btn-sm" onclick="editUser('${u.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">🗑</button>
+        </div></td>
       </tr>`).join('')
     : `<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">👥</div><p>Sin usuarios registrados</p></div></td></tr>`;
 }
+
+window.editUser = (id) => {
+  const u = allUsers.find(x => x.id === id);
+  if (!u) return;
+  document.getElementById('user-form-card').style.display = 'block';
+  document.getElementById('user-form-title').textContent = 'Editar Usuario';
+  document.getElementById('u-edit-id').value = id;
+  document.getElementById('u-nombre').value = u.nombre || '';
+  document.getElementById('u-email').value = u.email || '';
+  document.getElementById('u-email').disabled = true;
+  document.getElementById('u-pass').value = '';
+  document.getElementById('u-pass').placeholder = 'Dejar vacío para mantener contraseña';
+  document.getElementById('u-rol').value = u.rol || 'agent';
+  document.getElementById('user-save-btn').textContent = '💾 Guardar Cambios';
+  document.getElementById('user-save-btn').onclick = saveUserEdit;
+  document.getElementById('user-form-card').scrollIntoView({ behavior: 'smooth' });
+};
+
+window.saveUserEdit = async () => {
+  if (!db) return showToast('Firebase no configurado', 'error');
+  const editId = document.getElementById('u-edit-id').value;
+  if (!editId) return saveUser();
+  
+  clearAllFieldErrors('user-form-card');
+  const validation = validateForm('user-form-card', {
+    'u-nombre': ['required', ['minLength', 2]]
+  });
+  
+  if (!validation.isValid) {
+    Object.entries(validation.errors).forEach(([field, error]) => showFieldError(field, error));
+    return showToast('Completa los campos correctamente', 'error');
+  }
+  
+  const nombre = document.getElementById('u-nombre').value.trim();
+  const rol = document.getElementById('u-rol').value;
+  const data = { nombre, rol, updatedAt: Date.now() };
+  
+  try {
+    await update(ref(db, `users/${editId}`), {...data});
+    showToast('Usuario actualizado', 'success');
+    hideUserForm();
+  } catch(e) {
+    showToast('Error al actualizar usuario', 'error');
+  }
+};
 
 // ══ EXPORTACIÓN XLSX ══
 
@@ -2379,22 +2509,28 @@ window.exportActivos = () => {
 
   let data = allAssets.filter(a =>
     (!emp || a.empresa === emp) &&
-    (!q   || a.nombre?.toLowerCase().includes(q) || a.serial?.toLowerCase().includes(q))
+    (!q   || a.nombre?.toLowerCase().includes(q) || a.serial?.toLowerCase().includes(q) || a.activo?.toLowerCase().includes(q))
   );
 
   if (!data.length) return showToast('No hay activos para exportar', 'error');
 
   const estadoLabels = { activo:'Activo', inactivo:'Inactivo', mantenimiento:'En Mantenimiento' };
   const rows = data.map(a => ({
-    'Empresa':      a.empresaLabel || a.empresa || '',
-    'Nombre':       a.nombre || '',
-    'Tipo':         a.tipo || '',
-    'Serial':       a.serial || '',
-    'Ubicación':    a.ubicacion || '',
-    'Responsable':  a.responsable || '',
-    'Estado':       estadoLabels[a.estado] || a.estado || '',
-    'Descripción':  a.descripcion || '',
-    'Fecha Registro': fmtDateStr(a.createdAt),
+    'Empresa':        a.empresaLabel || a.empresa || '',
+    'AREA':         a.area || '',
+    'EQUIPO':       a.nombre || '',
+    'MODELO':       a.modelo || '',
+    'SN':          a.serial || '',
+    'ACTIVO':       a.activo || '',
+    'Sistema Operativo': a.sistema || '',
+    'Version':     a.version || '',
+    'Direccion IP': a.ip || '',
+    'Direccion MAC': a.mac || '',
+    'Ubicacion': a.ubicacion || '',
+    'Estado':     estadoLabels[a.estado] || a.estado || '',
+    'Responsable': a.responsable || '',
+    'Descripcion': a.descripcion || '',
+    'Fecha Creacion': fmtDateStr(a.createdAt),
   }));
 
   const ws = XLSX.utils.json_to_sheet(rows);
@@ -2405,14 +2541,14 @@ window.exportActivos = () => {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Activos');
 
-  const tipoCount = {};
-  data.forEach(a => { tipoCount[a.tipo] = (tipoCount[a.tipo] || 0) + 1; });
-  const resumen = Object.entries(tipoCount).map(([tipo, cant]) => ({ 'Tipo': tipo, 'Cantidad': cant }));
-  resumen.push({ 'Tipo': 'TOTAL', 'Cantidad': data.length });
+  const areaCount = {};
+  data.forEach(a => { areaCount[a.area] = (areaCount[a.area] || 0) + 1; });
+  const resumen = Object.entries(areaCount).map(([area, cant]) => ({ 'Area': area, 'Cantidad': cant }));
+  resumen.push({ 'Area': 'TOTAL', 'Cantidad': data.length });
   const wsResumen = XLSX.utils.json_to_sheet(resumen);
-  wsResumen['!cols'] = [{ wch: 20 }, { wch: 12 }];
-  applyHeaderStyle(wsResumen, ['Tipo', 'Cantidad']);
-  XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
+  wsResumen['!cols'] = [{ wch: 25 }, { wch: 12 }];
+  applyHeaderStyle(wsResumen, ['Area', 'Cantidad']);
+  XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen por Area');
 
   const empLabel = emp ? (emp === 'vehidiesel' ? 'Vehidiesel' : 'HB') : 'Todas';
   const fecha = new Date().toISOString().slice(0,10);
@@ -2428,7 +2564,7 @@ window.exportMantenimientos = () => {
 
   let data = allMaints.filter(m =>
     (!emp || m.empresa === emp) &&
-    (!q   || m.activoNombre?.toLowerCase().includes(q) || m.tecnico?.toLowerCase().includes(q))
+    (!q   || m.usuarioNombre?.toLowerCase().includes(q) || m.tecnico?.toLowerCase().includes(q))
   );
 
   if (!data.length) return showToast('No hay mantenimientos para exportar', 'error');
@@ -2436,12 +2572,11 @@ window.exportMantenimientos = () => {
   const estadoLabels = { pendiente:'Pendiente', en_proceso:'En Proceso', completado:'Completado' };
   const rows = data.map(m => ({
     'Empresa':      m.empresaLabel || m.empresa || '',
-    'Activo':       m.activoNombre || '',
+    'Responsable':  m.responsable || '',
     'Tipo':         m.tipo || '',
     'Técnico':      m.tecnico || '',
     'Fecha':        m.fecha || '',
     'Estado':       estadoLabels[m.estado] || m.estado || '',
-    'Costo ($)':    m.costo || 0,
     'Descripción':  m.descripcion || '',
     'Registrado':   fmtDateStr(m.createdAt),
   }));
@@ -2458,6 +2593,30 @@ window.exportMantenimientos = () => {
   const fecha = new Date().toISOString().slice(0,10);
   downloadXlsx(wb, `Mantenimientos_${empLabel}_${fecha}.xlsx`);
   showToast('Informe de mantenimientos exportado', 'success');
+};
+
+window.exportUsuarios = () => {
+  if (!xlsxLoaded && typeof XLSX === 'undefined') return showToast('Biblioteca de exportación no disponible', 'error');
+  if (!allUsers.length) return showToast('No hay usuarios para exportar', 'error');
+  
+  const rolLabels = { admin:'Administrador', agent:'Agente' };
+  const rows = allUsers.map(u => ({
+    'Nombre': u.nombre || '',
+    'Correo': u.email || '',
+    'Rol': rolLabels[u.rol] || u.rol || '',
+    'Fecha Registro': fmtDateStr(u.createdAt)
+  }));
+  
+  const ws = XLSX.utils.json_to_sheet(rows);
+  autoColWidths(ws, rows, Object.keys(rows[0]));
+  applyHeaderStyle(ws, Object.keys(rows[0]));
+  ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+  
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Usuarios');
+  
+  downloadXlsx(wb, `Usuarios_${new Date().toISOString().slice(0,10)}.xlsx`);
+  showToast('Informe de usuarios exportado', 'success');
 };
 
 
@@ -2733,6 +2892,7 @@ window.submitPublicTicket = async () => {
       estado: 'abierto',
       createdAt: Date.now()
     });
+    setRateLimit();
     document.getElementById('ticket-num').textContent = numero;
     document.getElementById('ticket-form-section').style.display = 'none';
     document.getElementById('ticket-success').style.display = 'block';
@@ -2749,8 +2909,10 @@ window.saveAsset = async () => {
   
   const validation = validateForm('asset-form-card', {
     'a-empresa': ['required'],
+    'a-area': ['required'],
     'a-nombre': ['required'],
-    'a-tipo': ['required']
+    'a-serial': ['required'],
+    'a-activo': ['required']
   });
   
   if (!validation.isValid) {
@@ -2761,29 +2923,33 @@ window.saveAsset = async () => {
   }
   
   const empresa = document.getElementById('a-empresa').value;
-  const nombre  = document.getElementById('a-nombre').value.trim();
-  const tipo    = document.getElementById('a-tipo').value;
   
   const data = {
     empresa, empresaLabel: EMPRESAS[empresa]?.label||empresa,
-    nombre, tipo,
+    area: document.getElementById('a-area').value.trim(),
+    nombre: document.getElementById('a-nombre').value.trim(),
+    modelo: document.getElementById('a-modelo').value.trim(),
     serial: document.getElementById('a-serial').value.trim(),
-    ubicacion: document.getElementById('a-ubicacion').value.trim(),
-    responsable: document.getElementById('a-responsable').value.trim(),
+    activo: document.getElementById('a-activo').value.trim(),
+    sistema: document.getElementById('a-sistema').value,
+    version: document.getElementById('a-version').value.trim(),
+    ip: document.getElementById('a-ip').value.trim(),
+    mac: document.getElementById('a-mac').value.trim(),
     estado: document.getElementById('a-estado').value,
+    responsable: document.getElementById('a-responsable').value.trim(),
     descripcion: document.getElementById('a-descripcion').value.trim(),
     updatedAt: Date.now()
   };
   const editId = document.getElementById('a-edit-id').value;
   if (editId) {
-    await update(ref(db, `assets/${editId}`), data);
+    await update(ref(db, `assets/${editId}`), {...data});
     showToast('Activo actualizado', 'success');
   } else {
     data.createdAt = Date.now();
-    await push(ref(db, 'assets'), data);
+    await push(ref(db, 'assets'), {...data});
     showToast('Activo creado', 'success');
   }
-  hideAssetForm();
+hideAssetForm();
 };
 
 window.saveMaint = async () => {
@@ -2819,16 +2985,15 @@ window.saveMaint = async () => {
     tipo, fecha, descripcion: desc,
     tecnico: document.getElementById('m-tecnico').value.trim(),
     estado:  document.getElementById('m-estado').value,
-    costo:   parseFloat(document.getElementById('m-costo').value)||0,
     updatedAt: Date.now()
   };
   const editId = document.getElementById('m-edit-id').value;
   if (editId) {
-    await update(ref(db, `maintenances/${editId}`), data);
+    await update(ref(db, `maintenances/${editId}`), {...data});
     showToast('Mantenimiento actualizado', 'success');
   } else {
     data.createdAt = Date.now();
-    await push(ref(db, 'maintenances'), data);
+    await push(ref(db, 'maintenances'), {...data});
     showToast('Mantenimiento creado', 'success');
   }
   hideMaintForm();
@@ -2861,7 +3026,7 @@ window.saveUser = async () => {
   
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
-    await set(ref(db, `users/${cred.user.uid}`), { nombre, email, rol, createdAt: Date.now() });
+    await set(ref(db, `users/${cred.user.uid}`), {...{ nombre, email, rol, createdAt: Date.now() }});
     showToast('Usuario creado: ' + email, 'success');
     hideUserForm();
     ['u-nombre','u-email','u-pass'].forEach(id => document.getElementById(id).value = '');
