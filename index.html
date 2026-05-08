@@ -812,6 +812,7 @@
       </div>
       <div class="nav-section">
         <div class="nav-section-title">Administración</div>
+        <div class="nav-item" onclick="showPage('empleados')" data-page="empleados"><span class="icon">👤</span> Empleados</div>
         <div class="nav-item" onclick="showPage('usuarios')" data-page="usuarios"><span class="icon">👥</span> Usuarios</div>
         <div class="nav-item" onclick="showPage('config')" data-page="config"><span class="icon">⚙️</span> Configuración</div>
       </div>
@@ -936,6 +937,8 @@
           <div><h1>🖥 Activos</h1><p>Inventario de equipos y recursos</p></div>
           <div class="actions-row">
             <button class="btn btn-ghost" onclick="exportActivos()">📥 Exportar Excel</button>
+            <button class="btn btn-ghost" onclick="document.getElementById('import-activos-file').click()">📤 Importar Excel</button>
+            <input type="file" id="import-activos-file" accept=".xlsx,.xls" style="display:none" onchange="importActivos(event)">
             <button class="btn btn-primary" onclick="showAssetForm()">+ Nuevo Activo</button>
           </div>
         </div>
@@ -944,7 +947,7 @@
           <h3 id="asset-form-title">Nuevo Activo</h3>
           <div class="form-row">
             <div class="form-group"><label>Empresa *</label>
-              <select id="a-empresa">
+              <select id="a-empresa" onchange="populateEmpleadoDropdown()">
                 <option value="">Selecciona empresa...</option>
                 <option value="vehidiesel">🚛 Vehidiesel S.A.S</option>
                 <option value="hb">🏢 HB Y CIA S.A.S</option>
@@ -991,7 +994,21 @@
                 <option value="mantenimiento">En Mantenimiento</option>
               </select>
             </div>
-            <div class="form-group"><label>Responsable</label><input type="text" id="a-responsable" placeholder="Nombre del encargado"></div>
+            <div class="form-group"><label>Empleado asignado</label>
+              <select id="a-empleado">
+                <option value="">-- Sin asignar (Disponible) --</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Responsable (texto libre)</label><input type="text" id="a-responsable" placeholder="Nombre del encargado"></div>
+            <div class="form-group"><label>Ubicación</label>
+              <select id="a-ubicacion">
+                <option value="CARTAGENA">CARTAGENA</option>
+                <option value="BUCARAMANGA">BUCARAMANGA</option>
+                <option value="BOGOTA">BOGOTA</option>
+              </select>
+            </div>
           </div>
           <div class="form-row">
             <div class="form-group"><label>Descripción</label><input type="text" id="a-descripcion" placeholder="Notas adicionales..."></div>
@@ -1026,6 +1043,78 @@
         </div>
       </div>
 
+      <!-- ── EMPLEADOS ── -->
+      <div class="page" id="page-empleados" style="display:none;height:auto;">
+        <div class="page-header">
+          <div><h1>👤 Empleados</h1><p>Registro de empleados y equipos asignados</p></div>
+          <div class="actions-row">
+            <button class="btn btn-ghost" onclick="exportEmpleados()">📥 Exportar Excel</button>
+            <button class="btn btn-ghost" onclick="document.getElementById('import-empleados-file').click()">📤 Importar Excel</button>
+            <input type="file" id="import-empleados-file" accept=".xlsx,.xls" style="display:none" onchange="importEmpleados(event)">
+            <button class="btn btn-primary" onclick="showEmpleadoForm()">+ Nuevo Empleado</button>
+          </div>
+        </div>
+
+        <div class="form-card" id="empleado-form-card" style="display:none;margin-bottom:24px;">
+          <h3 id="empleado-form-title">Nuevo Empleado</h3>
+          <div class="form-row">
+            <div class="form-group"><label>Empresa *</label>
+              <select id="e-empresa">
+                <option value="">Selecciona empresa...</option>
+                <option value="vehidiesel">🚛 Vehidiesel S.A.S</option>
+                <option value="hb">🏢 HB Y CIA S.A.S</option>
+                <option value="vehimotors">🚗 Vehimotors S.A.S</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Area</label><input type="text" id="e-area" placeholder="Ej: Contabilidad"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Nombre completo *</label><input type="text" id="e-nombre" placeholder="Nombre y apellido"></div>
+            <div class="form-group"><label>Cargo</label><input type="text" id="e-cargo" placeholder="Ej: Analista"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Correo</label><input type="email" id="e-email" placeholder="correo@empresa.com"></div>
+            <div class="form-group"><label>Telefono</label><input type="text" id="e-telefono" placeholder="300 123 4567"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Documento de identidad</label><input type="text" id="e-documento" placeholder="CC o NIT"></div>
+            <div class="form-group"><label>Estado</label>
+              <select id="e-estado">
+                <option value="activo">Activo</option>
+                <option value="inactivo">Inactivo</option>
+              </select>
+            </div>
+          </div>
+          <input type="hidden" id="e-edit-id">
+          <div class="actions-row">
+            <button class="btn btn-primary" onclick="saveEmpleado()">💾 Guardar</button>
+            <button class="btn btn-ghost" onclick="hideEmpleadoForm()">Cancelar</button>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-header">
+            <h3>Directorio de Empleados</h3>
+            <div class="table-filters">
+              <input type="text" id="search-empleados" placeholder="🔍 Buscar..." oninput="filterEmpleados()">
+              <select id="filter-empresa-empleados" onchange="filterEmpleados()">
+                <option value="">Todas las empresas</option>
+                <option value="vehidiesel">Vehidiesel</option>
+                <option value="hb">HB Y CIA</option>
+                <option value="vehimotors">Vehimotors</option>
+              </select>
+            </div>
+          </div>
+          <div style="overflow-x:auto;width:100%;">
+            <table style="width:100%;border-collapse:collapse;">
+              <thead><tr><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Empresa</th><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Nombre</th><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Cargo</th><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Area</th><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Correo</th><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Telefono</th><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Equipos Asignados</th><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Estado</th><th style="padding:8px;text-align:left;font-size:.7rem;font-weight:700;color:#8080a0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07)">Acciones</th></tr></thead>
+              <tbody id="empleados-tbody"></tbody>
+            </table>
+          </div>
+          <div id="empleados-pagination"></div>
+        </div>
+      </div>
+
       <!-- ── MANTENIMIENTOS ── -->
       <div class="page" id="page-mantenimientos">
         <div class="page-header">
@@ -1040,12 +1129,16 @@
           <h3 id="maint-form-title">Nuevo Mantenimiento</h3>
           <div class="form-row">
             <div class="form-group"><label>Empresa *</label>
-              <select id="m-empresa" onchange="filterResponsablesByEmpresa()">
+              <select id="m-empresa" onchange="filterResponsablesByEmpresa();filterActivosByEmpresa()">
                 <option value="">Selecciona empresa...</option>
                 <option value="vehidiesel">🚛 Vehidiesel S.A.S</option>
                 <option value="hb">🏢 HB Y CIA S.A.S</option>
                 <option value="vehimotors">🚗 Vehimotors S.A.S</option>
               </select>
+            </div>
+            <div class="form-group"><label>Activo *</label>
+              <select id="m-activo"><option value="">Selecciona empresa primero...</option></select>
+            </div>
             </div>
             <div class="form-group"><label>Responsable *</label>
               <select id="m-usuario"><option value="">Selecciona empresa primero...</option></select>
@@ -1217,6 +1310,10 @@
               <div style="font-size:2rem;font-weight:700;color:var(--accent2);" id="cfg-stat-users">0</div>
               <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;">Usuarios</div>
             </div>
+            <div style="background:var(--surface2);padding:16px;border-radius:10px;text-align:center;">
+              <div style="font-size:2rem;font-weight:700;color:#34d399;" id="cfg-stat-empleados">0</div>
+              <div style="font-size:.75rem;color:var(--muted);text-transform:uppercase;">Empleados</div>
+            </div>
           </div>
         </div>
 
@@ -1246,6 +1343,9 @@
       </button>
       <button class="mob-nav-item" id="mobnav-activos" onclick="showPage('activos');setActiveMobNav('activos')" data-page="activos">
         <span class="mob-icon">🖥</span>Activos
+      </button>
+      <button class="mob-nav-item" id="mobnav-empleados" onclick="showPage('empleados');setActiveMobNav('empleados')" data-page="empleados">
+        <span class="mob-icon">👤</span>Empleados
       </button>
       <button class="mob-nav-item" id="mobnav-mantenimientos" onclick="showPage('mantenimientos');setActiveMobNav('mantenimientos')" data-page="mantenimientos">
         <span class="mob-icon">🔧</span>Mant.
@@ -1580,6 +1680,7 @@ let allTickets     = [];
 let allAssets      = [];
 let allMaints      = [];
 let allUsers       = [];
+let allEmpleados   = [];
 let selectedEmpresa = '';
 let publicEmpresa   = '';
 let filteredTickets = [];
@@ -1589,10 +1690,12 @@ let filteredMaints = [];
 const ticketsPaginator = new Paginator('tickets', 15);
 const assetsPaginator = new Paginator('assets', 15);
 const maintsPaginator = new Paginator('maints', 15);
+const empleadosPaginator = new Paginator('empleados', 15);
 
 window.ticketsPaginator = ticketsPaginator;
 window.assetsPaginator = assetsPaginator;
 window.maintsPaginator = maintsPaginator;
+window.empleadosPaginator = empleadosPaginator;
 
 const EMPRESAS = {
   vehidiesel: { label: 'Vehidiesel S.A.S', icon: '🚛' },
@@ -1806,10 +1909,12 @@ function loadAllData() {
     const backupAssets = loadBackup('assets');
     const backupMaints = loadBackup('maints');
     const backupUsers = loadBackup('users');
+    const backupEmpleados = loadBackup('empleados');
     if (backupTickets) { allTickets = backupTickets; filterTickets(); }
     if (backupAssets) { allAssets = backupAssets; filterAssets(); }
     if (backupMaints) { allMaints = backupMaints; filterMaints(); }
     if (backupUsers) renderUsers();
+    if (backupEmpleados) { allEmpleados = backupEmpleados; filterEmpleados(); populateEmpleadoDropdown(); }
     renderDashboardStats();
     if (backupTickets || backupAssets || backupMaints) {
       showToast('Datos cargados desde backup local', 'info');
@@ -1864,6 +1969,19 @@ function loadAllData() {
     }
     saveBackup('users', allUsers);
     renderUsers(); renderDashboardStats();
+  });
+  onValue(ref(db, 'employees'), snap => {
+    allEmpleados = [];
+    const val = snap.val();
+    if (val) {
+      Object.entries(val).forEach(([key, data]) => {
+        if (data && typeof data === 'object') allEmpleados.push({ id: key, ...data });
+      });
+    }
+    allEmpleados.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+    saveBackup('empleados', allEmpleados);
+    filterEmpleados(); renderDashboardStats();
+    populateEmpleadoDropdown();
   });
 }
 
@@ -2103,44 +2221,11 @@ window.showAssetForm = () => {
   document.getElementById('a-empresa').value = selectedEmpresa || '';
   document.getElementById('a-sistema').value = '';
   document.getElementById('a-estado').value = 'activo';
+  document.getElementById('a-ubicacion').value = 'CARTAGENA';
+  populateEmpleadoDropdown();
+  document.getElementById('a-empleado').value = '';
 };
 window.hideAssetForm = () => document.getElementById('asset-form-card').style.display = 'none';
-
-window.saveAsset = async () => {
-  const empresa = document.getElementById('a-empresa').value;
-  if (!empresa) return toast('Selecciona una empresa', 'error');
-  const area = document.getElementById('a-area').value.trim();
-  const nombre = document.getElementById('a-nombre').value.trim();
-  const serial = document.getElementById('a-serial').value.trim();
-  const activo = document.getElementById('a-activo').value.trim();
-  if (!area || !nombre || !serial || !activo) return toast('Área, Equipo, SN y Activo son obligatorios', 'error');
-  const data = {
-    empresa, empresaLabel: EMPRESAS[empresa]?.label||empresa,
-    area: area,
-    nombre: nombre,
-    modelo: document.getElementById('a-modelo').value.trim(),
-    serial: serial,
-    activo: activo,
-    sistema: document.getElementById('a-sistema').value,
-    version: document.getElementById('a-version').value.trim(),
-    ip: document.getElementById('a-ip').value.trim(),
-    mac: document.getElementById('a-mac').value.trim(),
-    estado: document.getElementById('a-estado').value,
-    responsable: document.getElementById('a-responsable').value.trim(),
-    descripcion: document.getElementById('a-descripcion').value.trim(),
-    updatedAt: Date.now()
-  };
-  const editId = document.getElementById('a-edit-id').value;
-  if (editId) {
-    await update(ref(db, `assets/${editId}`), {...data});
-    toast('Activo actualizado', 'success');
-  } else {
-    data.createdAt = Date.now();
-    await push(ref(db, 'assets'), {...data});
-    toast('Activo creado', 'success');
-  }
-  hideAssetForm();
-};
 
 window.filterAssets = () => {
   const q   = document.getElementById('search-assets')?.value.toLowerCase() || '';
@@ -2158,7 +2243,14 @@ function renderAssets(list) {
     tbody.innerHTML = `<tr><td colspan="14"><div class="empty-state"><div class="empty-icon">🖥</div><p>Sin activos registrados</p></div></td></tr>`;
     return;
   }
-  tbody.innerHTML = list.map(a => `
+  const empName = (id) => {
+    if (!id) return null;
+    const emp = allEmpleados.find(e => e.id === id);
+    return emp ? emp.nombre : null;
+  };
+  tbody.innerHTML = list.map(a => {
+    const assignedTo = empName(a.empleadoId);
+    return `
     <tr style="border-bottom:1px solid rgba(255,255,255,.04);">
       <td style="padding:8px;vertical-align:middle;font-size:.75rem;">${a.empresaLabel||a.empresa||'—'}</td>
       <td style="padding:8px;vertical-align:middle;font-size:.75rem;">${a.area||'—'}</td>
@@ -2171,7 +2263,7 @@ function renderAssets(list) {
       <td style="padding:8px;vertical-align:middle;font-size:.75rem;">${a.ip||'—'}</td>
       <td style="padding:8px;vertical-align:middle;font-size:.7rem;">${a.mac||'—'}</td>
       <td style="padding:8px;vertical-align:middle;font-size:.75rem;">${a.ubicacion||'—'}</td>
-      <td style="padding:8px;vertical-align:middle;font-size:.75rem;">${a.responsable||'—'}</td>
+      <td style="padding:8px;vertical-align:middle;font-size:.75rem;">${assignedTo || '—'}</td>
       <td style="padding:8px;vertical-align:middle;">${statusBadge(a.estado||'activo')}</td>
       <td style="padding:8px;vertical-align:middle;">
         <div style="display:flex;gap:4px;">
@@ -2179,7 +2271,8 @@ function renderAssets(list) {
           <button class="btn btn-danger btn-sm" onclick="deleteAsset('${a.id}')" aria-label="Eliminar activo">🗑</button>
         </div>
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
 window.editAsset = (id) => {
@@ -2199,8 +2292,11 @@ window.editAsset = (id) => {
   document.getElementById('a-ip').value        = a.ip||'';
   document.getElementById('a-mac').value        = a.mac||'';
   document.getElementById('a-responsable').value= a.responsable||'';
+  document.getElementById('a-ubicacion').value  = a.ubicacion||'CARTAGENA';
   document.getElementById('a-estado').value     = a.estado||'activo';
   document.getElementById('a-descripcion').value= a.descripcion||'';
+  populateEmpleadoDropdown();
+  document.getElementById('a-empleado').value   = a.empleadoId || '';
   document.getElementById('asset-form-card').scrollIntoView({ behavior:'smooth' });
 };
 
@@ -2215,6 +2311,136 @@ window.deleteAsset = async (id) => {
   }
 };
 
+// ── EMPLEADOS ──
+window.populateEmpleadoDropdown = () => {
+  const emp = document.getElementById('a-empleado');
+  if (!emp) return;
+  const formEmpresa = document.getElementById('a-empresa').value;
+  const currentVal = emp.value;
+  const filtered = formEmpresa ? allEmpleados.filter(e => e.empresa === formEmpresa && e.estado === 'activo') : allEmpleados.filter(e => e.estado === 'activo');
+  emp.innerHTML = `<option value="">-- Sin asignar (Disponible) --</option>` +
+    filtered.map(e => `<option value="${e.id}">${e.nombre}${e.cargo ? ' — ' + e.cargo : ''}</option>`).join('');
+  emp.value = currentVal;
+};
+
+window.showEmpleadoForm = () => {
+  document.getElementById('empleado-form-card').style.display = 'block';
+  document.getElementById('empleado-form-title').textContent = 'Nuevo Empleado';
+  document.getElementById('e-edit-id').value = '';
+  ['e-area','e-nombre','e-cargo','e-email','e-telefono','e-documento'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('e-empresa').value = selectedEmpresa || '';
+  document.getElementById('e-estado').value = 'activo';
+};
+window.hideEmpleadoForm = () => document.getElementById('empleado-form-card').style.display = 'none';
+
+window.saveEmpleado = async () => {
+  const empresa = document.getElementById('e-empresa').value;
+  const nombre = document.getElementById('e-nombre').value.trim();
+  if (!empresa) return toast('Selecciona una empresa', 'error');
+  if (!nombre) return toast('Nombre es obligatorio', 'error');
+  const data = {
+    empresa,
+    empresaLabel: EMPRESAS[empresa]?.label || empresa,
+    nombre: nombre,
+    area: document.getElementById('e-area').value.trim(),
+    cargo: document.getElementById('e-cargo').value.trim(),
+    email: document.getElementById('e-email').value.trim(),
+    telefono: document.getElementById('e-telefono').value.trim(),
+    documento: document.getElementById('e-documento').value.trim(),
+    estado: document.getElementById('e-estado').value,
+    updatedAt: Date.now()
+  };
+  const editId = document.getElementById('e-edit-id').value;
+  if (editId) {
+    await update(ref(db, `employees/${editId}`), data);
+    toast('Empleado actualizado', 'success');
+  } else {
+    data.createdAt = Date.now();
+    await push(ref(db, 'employees'), data);
+    toast('Empleado creado', 'success');
+  }
+  hideEmpleadoForm();
+};
+
+window.filterEmpleados = () => {
+  const q = document.getElementById('search-empleados')?.value.toLowerCase() || '';
+  const emp = document.getElementById('filter-empresa-empleados')?.value || selectedEmpresa;
+  const filtered = allEmpleados.filter(e =>
+    (!emp || e.empresa === emp) &&
+    (!q || e.nombre?.toLowerCase().includes(q) || e.cargo?.toLowerCase().includes(q) || e.email?.toLowerCase().includes(q) || e.area?.toLowerCase().includes(q))
+  );
+  empleadosPaginator.setData(filtered, renderEmpleados);
+};
+
+function renderEmpleados(list) {
+  const tbody = document.getElementById('empleados-tbody');
+  if (!list || !list.length) {
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">👤</div><p>Sin empleados registrados</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(e => {
+    const assignedAssets = allAssets.filter(a => a.empleadoId === e.id);
+    const equiposHtml = assignedAssets.length
+      ? assignedAssets.map(a => `<span style="display:inline-block;background:rgba(108,99,255,.12);color:var(--accent);padding:2px 6px;border-radius:4px;font-size:.68rem;margin:1px;">${a.nombre}</span>`).join(' ')
+      : '<span style="color:var(--muted);font-size:.7rem;">Sin equipos</span>';
+    return `<tr style="border-bottom:1px solid rgba(255,255,255,.04);">
+      <td style="padding:8px;vertical-align:middle;font-size:.75rem;">${e.empresaLabel || '—'}</td>
+      <td style="padding:8px;vertical-align:middle;font-size:.75rem;"><strong>${e.nombre || '—'}</strong></td>
+      <td style="padding:8px;vertical-align:middle;font-size:.75rem;">${e.cargo || '—'}</td>
+      <td style="padding:8px;vertical-align:middle;font-size:.75rem;">${e.area || '—'}</td>
+      <td style="padding:8px;vertical-align:middle;font-size:.75rem;">${e.email || '—'}</td>
+      <td style="padding:8px;vertical-align:middle;font-size:.75rem;">${e.telefono || '—'}</td>
+      <td style="padding:8px;vertical-align:middle;max-width:180px;">${equiposHtml}</td>
+      <td style="padding:8px;vertical-align:middle;">${statusBadge(e.estado || 'activo')}</td>
+      <td style="padding:8px;vertical-align:middle;">
+        <div style="display:flex;gap:4px;">
+          <button class="btn btn-ghost btn-sm" onclick="editEmpleado('${e.id}')" aria-label="Editar empleado">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteEmpleado('${e.id}')" aria-label="Eliminar empleado">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+window.editEmpleado = (id) => {
+  const e = allEmpleados.find(x => x.id === id);
+  if (!e) return;
+  showEmpleadoForm();
+  document.getElementById('empleado-form-title').textContent = 'Editar Empleado';
+  document.getElementById('e-edit-id').value = id;
+  document.getElementById('e-empresa').value = e.empresa || '';
+  document.getElementById('e-area').value = e.area || '';
+  document.getElementById('e-nombre').value = e.nombre || '';
+  document.getElementById('e-cargo').value = e.cargo || '';
+  document.getElementById('e-email').value = e.email || '';
+  document.getElementById('e-telefono').value = e.telefono || '';
+  document.getElementById('e-documento').value = e.documento || '';
+  document.getElementById('e-estado').value = e.estado || 'activo';
+  document.getElementById('empleado-form-card').scrollIntoView({ behavior: 'smooth' });
+};
+
+window.deleteEmpleado = async (id) => {
+  if (!db) return showToast('Firebase no configurado', 'error');
+  const assignedAssets = allAssets.filter(a => a.empleadoId === id);
+  if (assignedAssets.length > 0) {
+    if (!confirm(`Este empleado tiene ${assignedAssets.length} equipo(s) asignado(s). ¿Eliminar empleado y desasignar equipos?`)) return;
+    for (const asset of assignedAssets) {
+      await update(ref(db, `assets/${asset.id}`), { empleadoId: null });
+    }
+  } else {
+    if (!confirm('¿Eliminar este empleado?')) return;
+  }
+  try {
+    await remove(ref(db, `employees/${id}`));
+    showToast('Empleado eliminado', 'success');
+  } catch (e) {
+    showToast('Error al eliminar empleado', 'error');
+  }
+};
+
 // ── MAINTENANCES ──
 window.showMaintForm = () => {
   document.getElementById('maint-form-card').style.display = 'block';
@@ -2225,6 +2451,7 @@ window.showMaintForm = () => {
   document.getElementById('m-estado').value = 'pendiente';
   document.getElementById('m-empresa').value = selectedEmpresa || '';
   filterResponsablesByEmpresa();
+  filterActivosByEmpresa();
 };
 window.hideMaintForm = () => document.getElementById('maint-form-card').style.display = 'none';
 
@@ -2237,31 +2464,12 @@ window.filterResponsablesByEmpresa = () => {
     uniqueResp.map(r => `<option value="${r}">${r}</option>`).join('');
 };
 
-window.saveMaint = async () => {
-  const empresa    = document.getElementById('m-empresa').value;
-  const responsable = document.getElementById('m-usuario').value;
-  const tipo       = document.getElementById('m-tipo').value;
-  const fecha    = document.getElementById('m-fecha').value;
-  const desc     = document.getElementById('m-descripcion').value.trim();
-  if (!empresa || !responsable || !tipo || !fecha || !desc) return toast('Completa los campos obligatorios', 'error');
-  const data = {
-    empresa, empresaLabel: EMPRESAS[empresa]?.label||empresa,
-    responsable: responsable,
-    tipo, fecha, descripcion: desc,
-    tecnico: document.getElementById('m-tecnico').value.trim(),
-    estado:  document.getElementById('m-estado').value,
-    updatedAt: Date.now()
-  };
-  const editId = document.getElementById('m-edit-id').value;
-  if (editId) {
-    await update(ref(db, `maintenances/${editId}`), {...data});
-    toast('Mantenimiento actualizado', 'success');
-  } else {
-    data.createdAt = Date.now();
-    await push(ref(db, 'maintenances'), {...data});
-    toast('Mantenimiento creado', 'success');
-  }
-  hideMaintForm();
+window.filterActivosByEmpresa = () => {
+  const emp = document.getElementById('m-empresa').value;
+  const filtered = emp ? allAssets.filter(a => a.empresa === emp) : allAssets;
+  document.getElementById('m-activo').innerHTML =
+    `<option value="">Selecciona activo...</option>` +
+    filtered.map(a => `<option value="${a.id}">${a.nombre} (${a.serial || a.activo})</option>`).join('');
 };
 
 window.filterMaints = () => {
@@ -2301,7 +2509,11 @@ window.editMaint = (id) => {
   document.getElementById('m-edit-id').value     = id;
   document.getElementById('m-empresa').value     = m.empresa||'';
   filterResponsablesByEmpresa();
-  setTimeout(() => { document.getElementById('m-usuario').value = m.responsable||''; }, 100);
+  filterActivosByEmpresa();
+  setTimeout(() => { 
+    document.getElementById('m-usuario').value = m.responsable||'';
+    document.getElementById('m-activo').value = m.activoId || '';
+  }, 100);
   document.getElementById('m-tipo').value        = m.tipo||'';
   document.getElementById('m-fecha').value       = m.fecha||'';
   document.getElementById('m-tecnico').value     = m.tecnico||'';
@@ -2556,6 +2768,148 @@ window.exportActivos = () => {
   showToast('Informe de activos exportado', 'success');
 };
 
+window.importActivos = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!file.name.match(/\.(xlsx|xls)$/i)) return showToast('Solo se permiten archivos .xlsx o .xls', 'error');
+  if (!db) return showToast('Firebase no configurado', 'error');
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+      if (!rows.length) return showToast('El archivo está vacío', 'error');
+
+      const fieldMap = {
+        'empresa': ['empresa', 'company'],
+        'empresaLabel': ['empresalabel', 'empresa_label'],
+        'area': ['area', 'área', 'departamento'],
+        'nombre': ['nombre', 'equipo', 'equipo ', 'name'],
+        'modelo': ['modelo', 'model'],
+        'serial': ['serial', 'sn', 'serie', 'número de serie', 'numero de serie'],
+        'activo': ['activo', 'código', 'codigo', 'activo fijo'],
+        'sistema': ['sistema', 'sistema operativo', 'os', 'sistema operativo'],
+        'version': ['version', 'versión', 'ver'],
+        'ip': ['ip', 'dirección ip', 'direccion ip', 'dirección de ip'],
+        'mac': ['mac', 'dirección mac', 'direccion mac', 'mac address'],
+        'ubicacion': ['ubicacion', 'ubicación', 'location', 'ubicado'],
+        'estado': ['estado', 'status'],
+        'responsable': ['responsable', 'encargado', 'usuario'],
+        'descripcion': ['descripcion', 'descripción', 'notas', 'observaciones'],
+      };
+
+      const normalize = (s) => s.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+      function resolveColumn(header) {
+        const h = normalize(header);
+        for (const [field, aliases] of Object.entries(fieldMap)) {
+          if (aliases.some(a => normalize(a) === h)) return field;
+        }
+        return null;
+      }
+
+      const headers = Object.keys(rows[0]);
+      const colMap = {};
+      headers.forEach(h => {
+        const resolved = resolveColumn(h);
+        if (resolved) colMap[h] = resolved;
+      });
+
+      let imported = 0;
+      let skipped = 0;
+      const errors = [];
+
+      const existingSerials = new Set(allAssets.map(a => a.serial).filter(Boolean));
+      const seenSerials = new Set();
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const asset = {};
+
+        for (const [header, value] of Object.entries(row)) {
+          const field = colMap[header];
+          if (field) asset[field] = String(value).trim();
+        }
+
+        if (existingSerials.has(asset.serial)) {
+          skipped++;
+          errors.push(`Fila ${i + 2}: SN duplicado en base de datos (${asset.serial})`);
+          continue;
+        }
+
+        if (seenSerials.has(asset.serial)) {
+          skipped++;
+          errors.push(`Fila ${i + 2}: SN duplicado en el archivo (${asset.serial})`);
+          continue;
+        }
+        seenSerials.add(asset.serial);
+
+        let empresa = asset.empresa || selectedEmpresa || '';
+        if (!empresa) {
+          skipped++;
+          errors.push(`Fila ${i + 2}: empresa no especificada`);
+          continue;
+        }
+
+        asset.area = asset.area || 'Sin area';
+        asset.nombre = asset.nombre || 'Sin nombre';
+        asset.activo = asset.activo || ('IMP-' + String(i).padStart(3,'0'));
+
+        const empresaKey = normalize(empresa);
+        if (empresaKey === 'vehidiesel' || empresaKey === 'vehidieselsas' || empresaKey === 'vehidiesel s.a.s') {
+          asset.empresa = 'vehidiesel';
+          asset.empresaLabel = EMPRESAS.vehidiesel.label;
+        } else if (empresaKey === 'hb' || empresaKey === 'hyciasas' || empresaKey === 'hb y cia s.a.s') {
+          asset.empresa = 'hb';
+          asset.empresaLabel = EMPRESAS.hb.label;
+        } else if (empresaKey === 'vehimotors' || empresaKey === 'vehimotorssas' || empresaKey === 'vehimotors s.a.s') {
+          asset.empresa = 'vehimotors';
+          asset.empresaLabel = EMPRESAS.vehimotors.label;
+        } else {
+          asset.empresa = empresa;
+          asset.empresaLabel = empresa;
+        }
+
+        const estadoRaw = normalize(asset.estado || '');
+        if (estadoRaw.includes('inactivo')) asset.estado = 'inactivo';
+        else if (estadoRaw.includes('mantenimiento')) asset.estado = 'mantenimiento';
+        else asset.estado = 'activo';
+
+        asset.createdAt = Date.now();
+        asset.updatedAt = Date.now();
+
+        try {
+          await push(ref(db, 'assets'), asset);
+          imported++;
+        } catch (err) {
+          skipped++;
+          errors.push(`Fila ${i + 2}: error al guardar - ${err.message}`);
+        }
+      }
+
+      let msg = `Importación completada: ${imported} activos importados`;
+      if (skipped > 0) msg += `, ${skipped} omitidos`;
+      showToast(msg, imported > 0 ? 'success' : 'warning');
+
+      if (errors.length > 0 && errors.length <= 5) {
+        console.warn('Errores de importación:', errors);
+      }
+
+      filterAssets();
+    } catch (err) {
+      showToast('Error al leer el archivo: ' + err.message, 'error');
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  event.target.value = '';
+};
+
 window.exportMantenimientos = () => {
   if (!xlsxLoaded && typeof XLSX === 'undefined') return showToast('Biblioteca de exportación no disponible', 'error');
   
@@ -2619,6 +2973,168 @@ window.exportUsuarios = () => {
   showToast('Informe de usuarios exportado', 'success');
 };
 
+window.exportEmpleados = () => {
+  if (!xlsxLoaded && typeof XLSX === 'undefined') return showToast('Biblioteca de exportación no disponible', 'error');
+  if (!allEmpleados.length) return showToast('No hay empleados para exportar', 'error');
+  
+  const emp = document.getElementById('filter-empresa-empleados')?.value || selectedEmpresa;
+  const q = document.getElementById('search-empleados')?.value?.toLowerCase() || '';
+  
+  let data = allEmpleados.filter(e =>
+    (!emp || e.empresa === emp) &&
+    (!q || e.nombre?.toLowerCase().includes(q) || e.cargo?.toLowerCase().includes(q) || e.email?.toLowerCase().includes(q))
+  );
+  
+  const estadoLabels = { activo: 'Activo', inactivo: 'Inactivo' };
+  const rows = data.map(e => {
+    const assignedAssets = allAssets.filter(a => a.empleadoId === e.id);
+    return {
+      'Empresa': e.empresaLabel || e.empresa || '',
+      'Nombre': e.nombre || '',
+      'Cargo': e.cargo || '',
+      'Area': e.area || '',
+      'Correo': e.email || '',
+      'Telefono': e.telefono || '',
+      'Documento': e.documento || '',
+      'Estado': estadoLabels[e.estado] || e.estado || '',
+      'Equipos Asignados': assignedAssets.map(a => `${a.nombre} (${a.serial})`).join(', ') || 'Ninguno',
+      'Fecha Registro': fmtDateStr(e.createdAt)
+    };
+  });
+  
+  const ws = XLSX.utils.json_to_sheet(rows);
+  autoColWidths(ws, rows, Object.keys(rows[0]));
+  applyHeaderStyle(ws, Object.keys(rows[0]));
+  ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+  
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Empleados');
+  
+  const empLabel = emp ? (emp === 'vehidiesel' ? 'Vehidiesel' : emp === 'hb' ? 'HB' : 'Vehimotors') : 'Todas';
+  downloadXlsx(wb, `Empleados_${empLabel}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  showToast('Informe de empleados exportado', 'success');
+};
+
+window.importEmpleados = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!file.name.match(/\.(xlsx|xls)$/i)) return showToast('Solo se permiten archivos .xlsx o .xls', 'error');
+  if (!db) return showToast('Firebase no configurado', 'error');
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+      if (!rows.length) return showToast('El archivo está vacío', 'error');
+
+      const fieldMap = {
+        'empresa': ['empresa', 'company'],
+        'empresaLabel': ['empresalabel', 'empresa_label'],
+        'nombre': ['nombre', 'name', 'empleado', 'nombres'],
+        'cargo': ['cargo', 'job', 'position', 'puesto'],
+        'area': ['area', 'área', 'departamento'],
+        'email': ['correo', 'email', 'e-mail'],
+        'telefono': ['telefono', 'teléfono', 'phone', 'celular'],
+        'documento': ['documento', 'documento', 'cedula', 'nit', 'identidad'],
+        'estado': ['estado', 'status'],
+      };
+
+      const normalize = (s) => s.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+      function resolveColumn(header) {
+        const h = normalize(header);
+        for (const [field, aliases] of Object.entries(fieldMap)) {
+          if (aliases.some(a => normalize(a) === h)) return field;
+        }
+        return null;
+      }
+
+      const headers = Object.keys(rows[0]);
+      const colMap = {};
+      headers.forEach(h => {
+        const resolved = resolveColumn(h);
+        if (resolved) colMap[h] = resolved;
+      });
+
+      let imported = 0;
+      let skipped = 0;
+      const errors = [];
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const emp = {};
+
+        for (const [header, value] of Object.entries(row)) {
+          const field = colMap[header];
+          if (field) emp[field] = String(value).trim();
+        }
+
+        if (!emp.nombre) {
+          skipped++;
+          errors.push(`Fila ${i + 2}: falta el nombre del empleado`);
+          continue;
+        }
+
+        let empresa = emp.empresa || selectedEmpresa || '';
+        if (!empresa) {
+          skipped++;
+          errors.push(`Fila ${i + 2}: empresa no especificada`);
+          continue;
+        }
+
+        const empresaKey = normalize(empresa);
+        if (empresaKey === 'vehidiesel' || empresaKey === 'vehidieselsas' || empresaKey === 'vehidiesel s.a.s') {
+          emp.empresa = 'vehidiesel';
+          emp.empresaLabel = EMPRESAS.vehidiesel.label;
+        } else if (empresaKey === 'hb' || empresaKey === 'hyciasas' || empresaKey === 'hb y cia s.a.s') {
+          emp.empresa = 'hb';
+          emp.empresaLabel = EMPRESAS.hb.label;
+        } else if (empresaKey === 'vehimotors' || empresaKey === 'vehimotorssas' || empresaKey === 'vehimotors s.a.s') {
+          emp.empresa = 'vehimotors';
+          emp.empresaLabel = EMPRESAS.vehimotors.label;
+        } else {
+          emp.empresa = empresa;
+          emp.empresaLabel = empresa;
+        }
+
+        const estadoRaw = normalize(emp.estado || '');
+        if (estadoRaw.includes('inactivo')) emp.estado = 'inactivo';
+        else emp.estado = 'activo';
+
+        emp.createdAt = Date.now();
+        emp.updatedAt = Date.now();
+
+        try {
+          await push(ref(db, 'employees'), emp);
+          imported++;
+        } catch (err) {
+          skipped++;
+          errors.push(`Fila ${i + 2}: error al guardar - ${err.message}`);
+        }
+      }
+
+      let msg = `Importación completada: ${imported} empleados importados`;
+      if (skipped > 0) msg += `, ${skipped} omitidos`;
+      showToast(msg, imported > 0 ? 'success' : 'warning');
+
+      if (errors.length > 0 && errors.length <= 5) {
+        console.warn('Errores de importación:', errors);
+      }
+
+      filterEmpleados();
+    } catch (err) {
+      showToast('Error al leer el archivo: ' + err.message, 'error');
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  event.target.value = '';
+};
 
 
 // ══ CONSULTA PÚBLICA ══
@@ -2784,6 +3300,7 @@ window.loadConfigPage = () => {
   document.getElementById('cfg-stat-assets').textContent = allAssets.length;
   document.getElementById('cfg-stat-maints').textContent = allMaints.length;
   document.getElementById('cfg-stat-users').textContent = allUsers.length;
+  document.getElementById('cfg-stat-empleados').textContent = allEmpleados.length;
   
   document.getElementById('cfg-version').textContent = '1.0.0';
   document.getElementById('cfg-last-update').textContent = new Date().toLocaleString('es-CO');
@@ -2828,14 +3345,16 @@ window.restoreFromBackup = () => {
   const assets = loadBackup('assets');
   const maints = loadBackup('maints');
   const users = loadBackup('users');
+  const empleados = loadBackup('empleados');
   
-  if (!tickets && !assets && !maints && !users) {
+  if (!tickets && !assets && !maints && !users && !empleados) {
     return showToast('No hay backups disponibles', 'error');
   }
   
   if (tickets) { allTickets = tickets; filterTickets(); }
   if (assets) { allAssets = assets; filterAssets(); }
   if (maints) { allMaints = maints; filterMaints(); }
+  if (empleados) { allEmpleados = empleados; filterEmpleados(); populateEmpleadoDropdown(); }
   
   renderDashboardStats();
   renderUsers();
@@ -2936,7 +3455,9 @@ window.saveAsset = async () => {
     ip: document.getElementById('a-ip').value.trim(),
     mac: document.getElementById('a-mac').value.trim(),
     estado: document.getElementById('a-estado').value,
+    empleadoId: document.getElementById('a-empleado').value || null,
     responsable: document.getElementById('a-responsable').value.trim(),
+    ubicacion: document.getElementById('a-ubicacion').value.trim(),
     descripcion: document.getElementById('a-descripcion').value.trim(),
     updatedAt: Date.now()
   };
