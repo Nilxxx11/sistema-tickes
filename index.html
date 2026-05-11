@@ -2248,7 +2248,7 @@ function renderAssets(list) {
     return emp ? emp.nombre : null;
   };
   tbody.innerHTML = list.map(a => {
-    const assignedTo = empName(a.empleadoId);
+    const assignedTo = empName(a.empleadoId) || a.responsable || null;
     return `
     <tr style="border-bottom:1px solid rgba(255,255,255,.04);">
       <td style="padding:8px;vertical-align:middle;font-size:.75rem;">${a.empresaLabel||a.empresa||'—'}</td>
